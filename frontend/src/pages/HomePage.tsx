@@ -1,8 +1,11 @@
-import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { getTrendingQuestions } from '@/services/questions';
-import { Button } from '@/components/ui/Button';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getTrendingQuestions, createQuestion } from '@/services/questions';
+import { getMyProfile } from '@/services/users';
+import { useAuthStore } from '@/store/authStore';
 import { UserAvatar } from '@/components/ui/UserAvatar';
+import { Button } from '@/components/ui/Button';
 
 const features = [
   {
@@ -66,12 +69,169 @@ const features = [
 ];
 
 export const HomePage = () => {
+  const { isAuthenticated, user } = useAuthStore();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const [showAskForm, setShowAskForm] = useState(false);
+  const [askTitle, setAskTitle] = useState('');
+  const [askContent, setAskContent] = useState('');
+
   const { data: trendingData, isLoading: trendingLoading } = useQuery({
     queryKey: ['trending'],
     queryFn: getTrendingQuestions,
   });
 
+  const { data: profileData } = useQuery({
+    queryKey: ['my-profile'],
+    queryFn: getMyProfile,
+    enabled: isAuthenticated,
+  });
+
+  const createMutation = useMutation({
+    mutationFn: createQuestion,
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['trending'] });
+      setAskTitle('');
+      setAskContent('');
+      setShowAskForm(false);
+      navigate(`/questions/${res.data?.id}`);
+    },
+  });
+
+  const handleAskSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (askTitle.trim() && askContent.trim()) {
+      createMutation.mutate({ title: askTitle.trim(), content: askContent.trim() });
+    }
+  };
+
   const trending = trendingData?.data ?? [];
+  const profile = profileData?.data;
+
+  if (isAuthenticated) {
+    return (
+      <div className="space-y-8 animate-fade-in">
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-purple-800 shadow-2xl shadow-primary-500/20 dark:from-primary-950 dark:via-primary-900 dark:to-purple-950">
+          <div className="absolute inset-0 bg-grid opacity-30" />
+          <div className="relative px-6 py-8 sm:px-10 sm:py-10">
+            <div className="flex items-start gap-4 sm:gap-5">
+              <Link to="/profile">
+                <UserAvatar src={user?.avatarUrl} username={user?.username ?? 'U'} size="xl" className="ring-4 ring-white/20 shrink-0" />
+              </Link>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-xl sm:text-2xl font-bold text-white">
+                  Welcome back, {user?.username}
+                </h1>
+                <p className="mt-1 text-sm text-white/70">
+                  What would you like to explore today?
+                </p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <Button
+                    variant="primary"
+                    className="!bg-white !text-primary-700 !shadow-xl !shadow-black/10 hover:!bg-gray-100"
+                    onClick={() => setShowAskForm(!showAskForm)}
+                  >
+                    {showAskForm ? 'Cancel' : 'Ask a Question'}
+                  </Button>
+                  <Link to="/questions">
+                    <Button
+                      variant="secondary"
+                      className="!border-white/25 !bg-white/10 !text-white hover:!bg-white/20"
+                    >
+                      Browse Questions
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+            {profile && (
+              <div className="mt-5 flex gap-6 sm:gap-8">
+                <div className="text-center">
+                  <p className="text-xl sm:text-2xl font-bold text-white">{profile.questionCount}</p>
+                  <p className="text-[11px] text-white/60 uppercase tracking-wider">Questions</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xl sm:text-2xl font-bold text-white">{profile.answerCount}</p>
+                  <p className="text-[11px] text-white/60 uppercase tracking-wider">Answers</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {showAskForm && (
+          <form onSubmit={handleAskSubmit} className="card p-5 sm:p-6 space-y-4 animate-slide-down">
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100">Ask a Question</h3>
+            <div>
+              <input
+                className="input-field"
+                placeholder="What's on your mind?"
+                value={askTitle}
+                onChange={(e) => setAskTitle(e.target.value)}
+                required
+                minLength={5}
+              />
+            </div>
+            <div>
+              <textarea
+                className="input-field min-h-[100px] resize-y"
+                placeholder="Provide some details..."
+                value={askContent}
+                onChange={(e) => setAskContent(e.target.value)}
+                required
+                minLength={10}
+              />
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="ghost" type="button" onClick={() => setShowAskForm(false)}>Cancel</Button>
+              <Button type="submit" isLoading={createMutation.isPending}>Post Question</Button>
+            </div>
+          </form>
+        )}
+
+        {!trendingLoading && trending.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">🔥 Trending Now</h2>
+              <Link to="/questions" className="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
+                View all &rarr;
+              </Link>
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {trending.map((q) => (
+                <div key={q.id} className="card group flex items-start gap-3 p-4 transition-all hover:-translate-y-0.5 hover:shadow-md">
+                  <Link to={`/profile/${q.author.username}`} onClick={(e) => e.stopPropagation()}>
+                    <UserAvatar src={q.author.avatarUrl} username={q.author.username} size="md" />
+                  </Link>
+                  <div className="min-w-0 flex-1">
+                    <Link to={`/questions/${q.id}`} className="after:absolute after:inset-0">
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate text-sm group-hover:text-primary-600 dark:group-hover:text-primary-400">
+                        {q.title}
+                      </h3>
+                    </Link>
+                    <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 line-clamp-1">{q.content}</p>
+                    <div className="mt-1.5 flex items-center gap-3 text-[11px] text-gray-400 dark:text-gray-500">
+                      <Link to={`/profile/${q.author.username}`} className="relative z-10 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+                        {q.author.username}
+                      </Link>
+                      <span className="flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3">
+                          <path d="M3.505 2.365A41.369 41.369 0 019 2c1.863 0 3.697.124 5.495.365 1.247.167 2.18 1.108 2.435 2.268a4.45 4.45 0 00-.577-.069 43.141 43.141 0 00-4.706 0C9.229 4.696 7.5 6.727 7.5 8.998v2.24c0 1.413.67 2.735 1.76 3.562l-2.98 2.98A.75.75 0 015 17.25v-3.443c-.501-.048-1-.106-1.495-.172C2.033 13.438 1 12.162 1 10.655V4.706c0-1.57 1.176-2.895 2.505-2.341z" />
+                          <path d="M14.5 6.5c1.064 0 2.09.07 3.09.195 1.416.177 2.41 1.36 2.41 2.74v3.346c0 1.506-1.032 2.782-2.505 2.942-.494.066-.994.124-1.495.172v3.443a.75.75 0 01-1.28.53l-2.98-2.98a4.47 4.47 0 01-.596-.595 3.5 3.5 0 011.09-.329c.588-.083 1.187-.15 1.79-.2A4.46 4.46 0 0115 11.24v-2.24c0-1.364-.625-2.602-1.622-3.5H14.5z" />
+                        </svg>
+                        {q.answerCount ?? 0}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-16 sm:space-y-24">
@@ -96,18 +256,12 @@ export const HomePage = () => {
           </p>
           <div className="mt-6 flex flex-wrap gap-3 sm:gap-4">
             <Link to="/register">
-              <Button
-                variant="primary"
-                className="!bg-white !text-primary-700 !shadow-xl !shadow-black/10 hover:!bg-gray-100 hover:!shadow-2xl"
-              >
+              <Button variant="primary" className="!bg-white !text-primary-700 !shadow-xl !shadow-black/10 hover:!bg-gray-100 hover:!shadow-2xl">
                 Get Started Free
               </Button>
             </Link>
             <Link to="/questions">
-              <Button
-                variant="secondary"
-                className="!border-white/25 !bg-white/10 !text-white !shadow-lg hover:!bg-white/20 dark:!border-white/15"
-              >
+              <Button variant="secondary" className="!border-white/25 !bg-white/10 !text-white !shadow-lg hover:!bg-white/20 dark:!border-white/15">
                 Browse Questions
               </Button>
             </Link>
@@ -119,26 +273,16 @@ export const HomePage = () => {
         <section>
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
-                🔥 Trending Now
-              </h2>
-              <p className="mt-1 text-gray-500 dark:text-gray-400">
-                Most active questions from the past week
-              </p>
+              <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">🔥 Trending Now</h2>
+              <p className="mt-1 text-gray-500 dark:text-gray-400">Most active questions from the past week</p>
             </div>
-            <Link
-              to="/questions"
-              className="text-sm font-medium text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
-            >
+            <Link to="/questions" className="text-sm font-medium text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
               View all &rarr;
             </Link>
           </div>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {trending.map((q) => (
-              <div
-                key={q.id}
-                className="card group flex items-start gap-4 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-              >
+              <div key={q.id} className="card group flex items-start gap-4 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
                 <Link to={`/profile/${q.author.username}`} onClick={(e) => e.stopPropagation()}>
                   <UserAvatar src={q.author.avatarUrl} username={q.author.username} size="md" />
                 </Link>
@@ -148,9 +292,7 @@ export const HomePage = () => {
                       {q.title}
                     </h3>
                   </Link>
-                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 line-clamp-1">
-                    {q.content}
-                  </p>
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 line-clamp-1">{q.content}</p>
                   <div className="mt-2 flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
                     <Link to={`/profile/${q.author.username}`} className="relative z-10 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
                       {q.author.username}
@@ -173,8 +315,7 @@ export const HomePage = () => {
       <section>
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
-            Everything you need to{' '}
-            <span className="gradient-text">learn and share</span>
+            Everything you need to <span className="gradient-text">learn and share</span>
           </h2>
           <p className="mt-3 text-gray-500 dark:text-gray-400">
             FlikChat combines the best of Q&A platforms with real-time discussions.
@@ -182,11 +323,7 @@ export const HomePage = () => {
         </div>
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((feature, i) => (
-            <div
-              key={feature.title}
-              className="card group p-6 transition-all duration-300 hover:-translate-y-0.5"
-              style={{ animationDelay: `${i * 80}ms` }}
-            >
+            <div key={feature.title} className="card group p-6 transition-all duration-300 hover:-translate-y-0.5" style={{ animationDelay: `${i * 80}ms` }}>
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-purple-600 text-white shadow-lg shadow-primary-500/15 transition-all duration-300 group-hover:scale-110 group-hover:shadow-primary-500/30">
                 {feature.icon}
               </div>
@@ -203,19 +340,11 @@ export const HomePage = () => {
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-purple-600 text-2xl font-bold text-white shadow-lg shadow-primary-500/20">
             F
           </div>
-          <h2 className="mt-5 text-2xl font-bold text-gray-900 dark:text-gray-100">
-            Ready to join the conversation?
-          </h2>
-          <p className="mt-2 text-gray-500 dark:text-gray-400">
-            Create your account and start asking questions in minutes.
-          </p>
+          <h2 className="mt-5 text-2xl font-bold text-gray-900 dark:text-gray-100">Ready to join the conversation?</h2>
+          <p className="mt-2 text-gray-500 dark:text-gray-400">Create your account and start asking questions in minutes.</p>
           <div className="mt-6 flex flex-wrap justify-center gap-4">
-            <Link to="/register">
-              <Button size="lg">Create Your Account</Button>
-            </Link>
-            <Link to="/questions">
-              <Button variant="secondary" size="lg">Browse Questions</Button>
-            </Link>
+            <Link to="/register"><Button size="lg">Create Your Account</Button></Link>
+            <Link to="/questions"><Button variant="secondary" size="lg">Browse Questions</Button></Link>
           </div>
         </div>
       </section>
