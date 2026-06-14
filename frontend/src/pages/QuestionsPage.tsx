@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/Button';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { AskQuestion } from '@/components/ui/AskQuestion';
+import { SidebarLayout, TrendingQuestions, TopicFilters, QuickActions } from '@/components/sidebar';
 import { QUESTION_TYPES } from '@/types';
 
 const sortOptions = [
@@ -51,7 +52,16 @@ export const QuestionsPage = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <SidebarLayout
+      sidebar={
+        <>
+          {isAuthenticated && <QuickActions />}
+          <TopicFilters />
+          <TrendingQuestions />
+        </>
+      }
+    >
+      <div className="space-y-6 animate-fade-in">
       <button
         onClick={() => navigate(-1)}
         className="flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors"
@@ -210,5 +220,6 @@ export const QuestionsPage = () => {
         </div>
       )}
     </div>
+    </SidebarLayout>
   );
 };

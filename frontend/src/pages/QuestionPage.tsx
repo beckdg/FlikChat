@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { ChatRoom } from '@/components/chat/ChatRoom';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { SidebarLayout, RelatedQuestions, ActiveDiscussions } from '@/components/sidebar';
 
 export const QuestionPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -136,7 +137,16 @@ export const QuestionPage = () => {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <>
+    <SidebarLayout
+      sidebar={
+        <>
+          <RelatedQuestions currentQuestionId={id} />
+          <ActiveDiscussions />
+        </>
+      }
+    >
+      <div className="space-y-8 animate-fade-in">
       <button
         onClick={() => navigate(-1)}
         className="flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors"
@@ -429,6 +439,9 @@ export const QuestionPage = () => {
         </div>
       )}
 
+    </div>
+    </SidebarLayout>
+
       <ConfirmModal
         isOpen={showDeleteQuestionModal}
         onClose={() => setShowDeleteQuestionModal(false)}
@@ -456,6 +469,6 @@ export const QuestionPage = () => {
         warning="This will permanently delete the answer and its associated discussion room and all chat messages. This action cannot be undone."
         confirmLabel="Delete Answer"
       />
-    </div>
+    </>
   );
 };

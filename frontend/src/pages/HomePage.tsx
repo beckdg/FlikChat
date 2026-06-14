@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/authStore';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { Button } from '@/components/ui/Button';
 import { AskQuestion } from '@/components/ui/AskQuestion';
+import { SidebarLayout, TrendingQuestions, ActiveDiscussions, QuickActions } from '@/components/sidebar';
 
 const features = [
   {
@@ -101,7 +102,16 @@ export const HomePage = () => {
 
   if (isAuthenticated) {
     return (
-      <div className="space-y-8 animate-fade-in">
+      <SidebarLayout
+        sidebar={
+          <>
+            <QuickActions onAskQuestion={() => setShowAskForm((prev) => !prev)} />
+            <TrendingQuestions />
+            <ActiveDiscussions />
+          </>
+        }
+      >
+        <div className="space-y-8 animate-fade-in">
         <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-purple-800 shadow-2xl shadow-primary-500/20 dark:from-primary-950 dark:via-primary-900 dark:to-purple-950">
           <div className="absolute inset-0 bg-grid opacity-30" />
           <div className="relative px-6 py-8 sm:px-10 sm:py-10">
@@ -206,6 +216,7 @@ export const HomePage = () => {
           </section>
         )}
       </div>
+      </SidebarLayout>
     );
   }
 
