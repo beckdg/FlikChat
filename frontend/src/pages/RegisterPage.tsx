@@ -12,6 +12,7 @@ export const RegisterPage = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
 
   const { mutate, isPending } = useMutation({
@@ -31,7 +32,11 @@ export const RegisterPage = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    mutate({ username, email, password });
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+    mutate({ username, email, password, confirmPassword });
   };
 
   return (
@@ -76,6 +81,16 @@ export const RegisterPage = () => {
               placeholder="Create a strong password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={8}
+              icon="lock"
+            />
+            <Input
+              label="Confirm Password"
+              type="password"
+              placeholder="Re-enter your password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               required
               minLength={8}
               icon="lock"

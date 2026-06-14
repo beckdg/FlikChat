@@ -9,7 +9,7 @@ export interface AuthResponse {
 export const loginUser = (data: { email: string; password: string }) =>
   api.post<ApiResponse<AuthResponse>>('/auth/login', data).then((r) => r.data);
 
-export const registerUser = (data: { email: string; username: string; password: string }) =>
+export const registerUser = (data: { email: string; username: string; password: string; confirmPassword?: string }) =>
   api.post<ApiResponse<AuthResponse>>('/auth/register', data).then((r) => r.data);
 
 export const fetchMe = () =>
