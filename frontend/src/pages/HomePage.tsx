@@ -151,11 +151,13 @@ export const HomePage = () => {
         </div>
 
         {showAskForm && (
-          <AskQuestion
-            onSubmit={(data) => createMutation.mutate(data)}
-            onCancel={() => setShowAskForm(false)}
-            isPending={createMutation.isPending}
-          />
+          <div className="mx-auto max-w-2xl">
+            <AskQuestion
+              onSubmit={(data) => createMutation.mutate(data)}
+              onCancel={() => setShowAskForm(false)}
+              isPending={createMutation.isPending}
+            />
+          </div>
         )}
 
         {!trendingLoading && trending.length > 0 && (

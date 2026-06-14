@@ -77,11 +77,13 @@ export const QuestionsPage = () => {
       </div>
 
       {showForm && (
-        <AskQuestion
-          onSubmit={(data) => mutate(data)}
-          onCancel={() => setShowForm(false)}
-          isPending={isPending}
-        />
+        <div className="mx-auto max-w-2xl">
+          <AskQuestion
+            onSubmit={(data) => mutate(data)}
+            onCancel={() => setShowForm(false)}
+            isPending={isPending}
+          />
+        </div>
       )}
 
       <div className="flex flex-col sm:flex-row gap-3">
