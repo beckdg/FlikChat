@@ -168,7 +168,7 @@ export const HomePage = () => {
             </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {trending.map((q) => (
-                <div key={q.id} className="card group flex items-start gap-3 p-4 transition-all hover:-translate-y-0.5 hover:shadow-md">
+                <div key={q.id} className={`card group flex items-start gap-3 p-4 transition-all hover:-translate-y-0.5 hover:shadow-md ${q.author.id === user?.id ? 'border-l-4 border-l-primary-500' : ''}`}>
                   <Link to={`/profile/${q.author.username}`} onClick={(e) => e.stopPropagation()}>
                     <UserAvatar src={q.author.avatarUrl} username={q.author.username} size="md" />
                   </Link>
@@ -250,7 +250,7 @@ export const HomePage = () => {
           </div>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {trending.map((q) => (
-              <div key={q.id} className="card group flex items-start gap-4 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+              <div key={q.id} className={`card group flex items-start gap-4 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${q.author.id === user?.id ? 'border-l-4 border-l-primary-500' : ''}`}>
                 <Link to={`/profile/${q.author.username}`} onClick={(e) => e.stopPropagation()}>
                   <UserAvatar src={q.author.avatarUrl} username={q.author.username} size="md" />
                 </Link>

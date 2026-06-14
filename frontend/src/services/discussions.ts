@@ -11,3 +11,9 @@ export const getMessages = (roomId: string, page = 1, limit = 50) =>
 
 export const sendMessage = (data: { content: string; roomId: string }) =>
   api.post<ApiResponse<ChatMessage>>('/discussions/messages', data).then((r) => r.data);
+
+export const updateMessage = (messageId: string, data: { content: string }) =>
+  api.patch<ApiResponse<ChatMessage>>(`/discussions/messages/${messageId}`, data).then((r) => r.data);
+
+export const deleteMessage = (messageId: string) =>
+  api.delete<ApiResponse<void>>(`/discussions/messages/${messageId}`).then((r) => r.data);

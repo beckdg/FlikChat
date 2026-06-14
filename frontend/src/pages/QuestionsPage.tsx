@@ -14,7 +14,7 @@ const sortOptions = [
 ] as const;
 
 export const QuestionsPage = () => {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
@@ -161,7 +161,7 @@ export const QuestionsPage = () => {
           {questions.map((q) => (
             <div
               key={q.id}
-              className="card relative flex items-start gap-4 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+              className={`card relative flex items-start gap-4 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${q.author.id === user?.id ? 'border-l-4 border-l-primary-500' : ''}`}
             >
               <Link to={`/profile/${q.author.username}`} onClick={(e) => e.stopPropagation()}>
                 <UserAvatar src={q.author.avatarUrl} username={q.author.username} size="md" />

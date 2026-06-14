@@ -68,6 +68,30 @@ export class DiscussionService {
 
     return message;
   }
+
+  async updateMessage(messageId: string, authorId: string, content: string) {
+    const existing = await prisma.chatMessage.findUnique({ where: { id: messageId } });
+    if (!existing) throw new AppError(404, 'Message not found');
+    if (existing.authorId !== authorId) throw new AppError(403, 'Not authorized');
+
+    const message = await prisma.chatMessage.update({
+      where: { id: messageId },
+      data: { content },
+      include: {
+        author: { select: { id: true, username: true, avatarUrl: true } },
+      },
+    });
+
+    return message;
+  }
+
+  async deleteMessage(messageId: string, authorId: string) {
+    const existing = await prisma.chatMessage.findUnique({ where: { id: messageId } });
+    if (!existing) throw new AppError(404, 'Message not found');
+    if (existing.authorId !== authorId) throw new AppError(403, 'Not authorized');
+
+    await prisma.chatMessage.delete({ where: { id: messageId } });
+  }
 }
 
 export const discussionService = new DiscussionService();

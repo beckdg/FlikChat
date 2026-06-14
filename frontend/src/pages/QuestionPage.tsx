@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getQuestionById } from '@/services/questions';
-import { getAnswersByQuestion, createAnswer } from '@/services/answers';
+import { getQuestionById, updateQuestion, deleteQuestion } from '@/services/questions';
+import { getAnswersByQuestion, createAnswer, updateAnswer, deleteAnswer } from '@/services/answers';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/Button';
 import { UserAvatar } from '@/components/ui/UserAvatar';
@@ -10,11 +10,15 @@ import { ChatRoom } from '@/components/chat/ChatRoom';
 
 export const QuestionPage = () => {
   const { id } = useParams<{ id: string }>();
-  const { isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [answerContent, setAnswerContent] = useState('');
   const [expandedRoom, setExpandedRoom] = useState<string | null>(null);
+  const [editingQuestion, setEditingQuestion] = useState(false);
+  const [editQuestionContent, setEditQuestionContent] = useState('');
+  const [editingAnswer, setEditingAnswer] = useState<string | null>(null);
+  const [editAnswerContent, setEditAnswerContent] = useState('');
 
   const { data: qData, isLoading: qLoading } = useQuery({
     queryKey: ['question', id],
@@ -28,7 +32,7 @@ export const QuestionPage = () => {
     enabled: !!id,
   });
 
-  const { mutate, isPending } = useMutation({
+  const createAnswerMutation = useMutation({
     mutationFn: createAnswer,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['answers', id] });
@@ -36,13 +40,40 @@ export const QuestionPage = () => {
     },
   });
 
+  const updateQuestionMutation = useMutation({
+    mutationFn: (data: { title?: string; content?: string }) => updateQuestion(id!, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['question', id] });
+      setEditingQuestion(false);
+    },
+  });
+
+  const deleteQuestionMutation = useMutation({
+    mutationFn: () => deleteQuestion(id!),
+    onSuccess: () => navigate('/questions'),
+  });
+
+  const updateAnswerMutation = useMutation({
+    mutationFn: ({ answerId, content }: { answerId: string; content: string }) => updateAnswer(answerId, { content }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['answers', id] });
+      setEditingAnswer(null);
+    },
+  });
+
+  const deleteAnswerMutation = useMutation({
+    mutationFn: (answerId: string) => deleteAnswer(answerId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['answers', id] }),
+  });
+
   const question = qData?.data;
   const answers = aData?.data ?? [];
+  const isOwnQuestion = question?.author.id === user?.id;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (answerContent.trim() && id) {
-      mutate({ content: answerContent.trim(), questionId: id });
+      createAnswerMutation.mutate({ content: answerContent.trim(), questionId: id });
     }
   };
 
@@ -77,7 +108,40 @@ export const QuestionPage = () => {
         </svg>
         Back
       </button>
-      <div className="card overflow-hidden p-0">
+
+      <div className={`card overflow-hidden p-0 ${isOwnQuestion ? 'border-l-4 border-l-primary-500' : ''}`}>
+        {isOwnQuestion && (
+          <div className="flex items-center justify-end gap-1 px-6 pt-3">
+            <button
+              onClick={() => {
+                if (editingQuestion) {
+                  setEditingQuestion(false);
+                  return;
+                }
+                setEditQuestionContent(question.content);
+                setEditingQuestion(true);
+              }}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" />
+                <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" />
+              </svg>
+            </button>
+            <button
+              onClick={() => {
+                if (window.confirm('Delete this question?')) {
+                  deleteQuestionMutation.mutate();
+                }
+              }}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c-.84 0-1.673.025-2.5.075V3.75c0-.69.56-1.25 1.25-1.25h2.5c.69 0 1.25.56 1.25 1.25v.325C11.673 4.025 10.84 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        )}
         <div className="h-2 bg-gradient-to-r from-primary-500 via-primary-600 to-purple-600" />
         <div className="p-6 sm:p-8">
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-3xl">
@@ -93,9 +157,24 @@ export const QuestionPage = () => {
             <span className="text-gray-300 dark:text-gray-600">·</span>
             <span>{question.answerCount ?? 0} answers</span>
           </div>
-          <p className="mt-5 leading-relaxed text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
-            {question.content}
-          </p>
+          {editingQuestion ? (
+            <div className="mt-4 space-y-3">
+              <textarea
+                className="input-field min-h-[100px] resize-y"
+                value={editQuestionContent}
+                onChange={(e) => setEditQuestionContent(e.target.value)}
+                minLength={10}
+              />
+              <div className="flex gap-2">
+                <Button size="sm" onClick={() => updateQuestionMutation.mutate({ content: editQuestionContent })} isLoading={updateQuestionMutation.isPending}>Save</Button>
+                <Button size="sm" variant="ghost" onClick={() => setEditingQuestion(false)}>Cancel</Button>
+              </div>
+            </div>
+          ) : (
+            <p className="mt-5 leading-relaxed text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
+              {question.content}
+            </p>
+          )}
         </div>
       </div>
 
@@ -126,8 +205,10 @@ export const QuestionPage = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {answers.map((answer) => (
-              <div key={answer.id} className="card overflow-hidden">
+            {answers.map((answer) => {
+              const isOwnAnswer = answer.author.id === user?.id;
+              return (
+              <div key={answer.id} className={`card overflow-hidden ${isOwnAnswer ? 'border-l-4 border-l-emerald-500' : ''}`}>
                 <div className="p-5 sm:p-6">
                   <div className="flex items-start justify-between">
                     <Link to={`/profile/${answer.author.username}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -141,16 +222,65 @@ export const QuestionPage = () => {
                         </span>
                       </div>
                     </Link>
-                    <div className="flex items-center gap-1 text-sm text-gray-400 dark:text-gray-500">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                        <path d="M1 8.25a1.25 1.25 0 112.5 0v7.5a1.25 1.25 0 11-2.5 0v-7.5zM11 3V1.7c0-.268.14-.526.395-.607A2 2 0 0114 3c0 .995-.182 1.948-.514 2.826-.204.54.166 1.174.744 1.174h2.52c1.243 0 2.261 1.01 2.146 2.247a23.864 23.864 0 01-1.341 5.974C17.153 16.323 16.072 17 14.9 17h-3.192a3 3 0 01-1.341-.317l-2.734-1.366A3 3 0 006.292 15H5V8h.963c.685 0 1.258-.483 1.612-1.068a4.011 4.011 0 012.166-1.73c.432-.143.853-.386 1.011-.814.16-.432.248-.9.248-1.388z" />
-                      </svg>
-                      {answer.voteCount}
+                    <div className="flex items-center gap-1">
+                      {isOwnAnswer && (
+                        <div className="flex items-center gap-0.5 mr-2">
+                          <button
+                            onClick={() => {
+                              if (editingAnswer === answer.id) {
+                                setEditingAnswer(null);
+                                return;
+                              }
+                              setEditAnswerContent(answer.content);
+                              setEditingAnswer(answer.id);
+                            }}
+                            className="flex h-7 w-7 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                              <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" />
+                              <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (window.confirm('Delete this answer?')) {
+                                deleteAnswerMutation.mutate(answer.id);
+                              }
+                            }}
+                            className="flex h-7 w-7 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                              <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c-.84 0-1.673.025-2.5.075V3.75c0-.69.56-1.25 1.25-1.25h2.5c.69 0 1.25.56 1.25 1.25v.325C11.673 4.025 10.84 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1 text-sm text-gray-400 dark:text-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                          <path d="M1 8.25a1.25 1.25 0 112.5 0v7.5a1.25 1.25 0 11-2.5 0v-7.5zM11 3V1.7c0-.268.14-.526.395-.607A2 2 0 0114 3c0 .995-.182 1.948-.514 2.826-.204.54.166 1.174.744 1.174h2.52c1.243 0 2.261 1.01 2.146 2.247a23.864 23.864 0 01-1.341 5.974C17.153 16.323 16.072 17 14.9 17h-3.192a3 3 0 01-1.341-.317l-2.734-1.366A3 3 0 006.292 15H5V8h.963c.685 0 1.258-.483 1.612-1.068a4.011 4.011 0 012.166-1.73c.432-.143.853-.386 1.011-.814.16-.432.248-.9.248-1.388z" />
+                        </svg>
+                        {answer.voteCount}
+                      </div>
                     </div>
                   </div>
-                  <p className="mt-3 leading-relaxed text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
-                    {answer.content}
-                  </p>
+                  {editingAnswer === answer.id ? (
+                    <div className="mt-3 space-y-3">
+                      <textarea
+                        className="input-field min-h-[80px] resize-y"
+                        value={editAnswerContent}
+                        onChange={(e) => setEditAnswerContent(e.target.value)}
+                        minLength={10}
+                      />
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => updateAnswerMutation.mutate({ answerId: answer.id, content: editAnswerContent })} isLoading={updateAnswerMutation.isPending}>Save</Button>
+                        <Button size="sm" variant="ghost" onClick={() => setEditingAnswer(null)}>Cancel</Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="mt-3 leading-relaxed text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
+                      {answer.content}
+                    </p>
+                  )}
                 </div>
 
                 <div className="border-t border-gray-100 dark:border-gray-800">
@@ -171,7 +301,8 @@ export const QuestionPage = () => {
                   )}
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
         )}
       </div>
@@ -188,7 +319,7 @@ export const QuestionPage = () => {
             minLength={10}
           />
           <div className="flex justify-end">
-            <Button type="submit" isLoading={isPending}>
+            <Button type="submit" isLoading={createAnswerMutation.isPending}>
               Post Answer
             </Button>
           </div>
