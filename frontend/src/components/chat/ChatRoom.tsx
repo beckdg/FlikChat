@@ -4,6 +4,7 @@ import { getMessages, sendMessage } from '@/services/discussions';
 import { joinRoom, leaveRoom } from '@/services/socket';
 import { useAuthStore } from '@/store/authStore';
 import { getSocket } from '@/services/socket';
+import { UserAvatar } from '@/components/ui/UserAvatar';
 import type { ChatMessage } from '@/types';
 
 interface ChatRoomProps {
@@ -95,7 +96,10 @@ export const ChatRoom = ({ roomId }: ChatRoomProps) => {
     <div className="mt-4 rounded-xl border border-gray-200/60 bg-gray-50/50 dark:border-gray-700/30 dark:bg-gray-900/30">
       <div className="flex items-center gap-2 border-b border-gray-200/60 px-4 py-3 dark:border-gray-700/30">
         <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-primary-400 to-purple-500 text-[10px] font-bold text-white">
-          C
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
+            <path d="M2.97 2.31a3.507 3.507 0 00-.47 0 1.5 1.5 0 00-1.485 1.522c0 .116.013.23.038.34L3.8 10.69a1.5 1.5 0 001.42.98h.041a1.5 1.5 0 001.389-.874l1.864-3.504a1.5 1.5 0 00-.027-1.42L6.34 2.917a1.5 1.5 0 00-1.179-.647 4.21 4.21 0 00-.096 0 5.491 5.491 0 00-1.454.338c-.219.088-.44.174-.663.248.098-.024.2-.04.306-.053.127-.016.256-.02.384-.02h.424z" />
+            <path d="M11.78 5.5a.75.75 0 00-.733-.633 5.5 5.5 0 00-1.133.066c-.352.064-.702.164-1.042.294l.75 1.348c.424.215.912.305 1.407.24.164-.021.326-.056.482-.102a6.47 6.47 0 00-.08.107l-1.73 3.252a1.5 1.5 0 00.026 1.414l1.047 1.882a.75.75 0 001.31-.73l-.89-1.6a.245.245 0 01.04-.277.24.24 0 01.278-.04l2.573 1.43a.75.75 0 10.688-1.333l-2.33-1.294.064-.12a4.414 4.414 0 001.49-3.342c0-.23-.014-.46-.042-.688a5.43 5.43 0 00-.65-1.78z" />
+          </svg>
         </div>
         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Discussion Room</span>
       </div>
@@ -113,7 +117,10 @@ export const ChatRoom = ({ roomId }: ChatRoomProps) => {
           messages.map((msg) => {
             const isOwn = msg.author.id === user?.id;
             return (
-              <div key={msg.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
+              <div key={msg.id} className={`flex items-end gap-2 ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                {!isOwn && (
+                  <UserAvatar src={msg.author.avatarUrl} username={msg.author.username} size="sm" className="rounded-full mb-0.5" />
+                )}
                 <div
                   className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${
                     isOwn
@@ -131,6 +138,9 @@ export const ChatRoom = ({ roomId }: ChatRoomProps) => {
                     {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
+                {isOwn && (
+                  <UserAvatar src={msg.author.avatarUrl} username={msg.author.username} size="sm" className="rounded-full mb-0.5" />
+                )}
               </div>
             );
           })

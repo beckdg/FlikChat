@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getTrendingQuestions } from '@/services/questions';
 import { Button } from '@/components/ui/Button';
+import { UserAvatar } from '@/components/ui/UserAvatar';
 
 const features = [
   {
@@ -139,9 +140,7 @@ export const HomePage = () => {
                 to={`/questions/${q.id}`}
                 className="card group flex items-start gap-4 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
               >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-purple-600 text-sm font-bold text-white shadow-md shadow-primary-500/15">
-                  {q.author.username.charAt(0).toUpperCase()}
-                </div>
+                <UserAvatar src={q.author.avatarUrl} username={q.author.username} size="md" />
                 <div className="min-w-0 flex-1">
                   <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-primary-600 dark:group-hover:text-primary-400">
                     {q.title}

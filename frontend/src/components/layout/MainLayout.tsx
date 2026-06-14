@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { useTheme } from '@/context/ThemeContext';
+import { UserAvatar } from '@/components/ui/UserAvatar';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -76,9 +77,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
                       : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100'
                   }`}
                 >
-                  <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-primary-400 to-purple-500 text-[10px] font-bold text-white">
-                    {user?.username?.charAt(0).toUpperCase() ?? 'U'}
-                  </div>
+                  <UserAvatar src={user?.avatarUrl} username={user?.username ?? 'U'} size="sm" />
                   <span className="hidden sm:inline">{user?.username ?? 'Profile'}</span>
                 </Link>
                 <button

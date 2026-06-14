@@ -5,6 +5,7 @@ import { getQuestionById } from '@/services/questions';
 import { getAnswersByQuestion, createAnswer } from '@/services/answers';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/Button';
+import { UserAvatar } from '@/components/ui/UserAvatar';
 import { ChatRoom } from '@/components/chat/ChatRoom';
 
 export const QuestionPage = () => {
@@ -74,9 +75,7 @@ export const QuestionPage = () => {
           </h1>
           <div className="mt-3 flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
             <div className="flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-primary-400 to-purple-500 text-[10px] font-bold text-white">
-                {question.author.username.charAt(0).toUpperCase()}
-              </div>
+              <UserAvatar src={question.author.avatarUrl} username={question.author.username} size="sm" className="rounded-full" />
               <span className="font-medium text-gray-700 dark:text-gray-300">{question.author.username}</span>
             </div>
             <span className="text-gray-300 dark:text-gray-600">·</span>
@@ -122,9 +121,7 @@ export const QuestionPage = () => {
                 <div className="p-5 sm:p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-[10px] font-bold text-white">
-                        {answer.author.username.charAt(0).toUpperCase()}
-                      </div>
+                      <UserAvatar src={answer.author.avatarUrl} username={answer.author.username} size="sm" className="rounded-full" />
                       <div>
                         <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           {answer.author.username}

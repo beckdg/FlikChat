@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getQuestions, createQuestion } from '@/services/questions';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/Button';
+import { UserAvatar } from '@/components/ui/UserAvatar';
 
 export const QuestionsPage = () => {
   const { isAuthenticated } = useAuthStore();
@@ -115,9 +116,7 @@ export const QuestionsPage = () => {
               to={`/questions/${q.id}`}
               className="card flex items-start gap-4 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-purple-600 text-sm font-bold text-white shadow-md shadow-primary-500/15">
-                {q.author.username.charAt(0).toUpperCase()}
-              </div>
+              <UserAvatar src={q.author.avatarUrl} username={q.author.username} size="md" />
               <div className="min-w-0 flex-1">
                 <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
                   {q.title}
