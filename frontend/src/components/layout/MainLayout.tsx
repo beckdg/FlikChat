@@ -51,7 +51,25 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
             <span className="text-lg font-bold gradient-text">FlikChat</span>
           </Link>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-3">
+            <nav className="hidden sm:flex items-center gap-1">
+              {bottomItems.map((item) => {
+                const active = isActive(item.to);
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className={`rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
+                      active
+                        ? 'text-primary-600 dark:text-primary-400'
+                        : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
             <button
               onClick={toggleTheme}
               className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 transition-all duration-200 hover:bg-gray-100 hover:text-yellow-500 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-yellow-400"
@@ -69,6 +87,13 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
             </button>
 
             {isAuthenticated ? (
+              <>
+              <Link
+                to="/profile"
+                className="hidden sm:flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 hover:scale-110"
+              >
+                <UserAvatar src={user?.avatarUrl} username={user?.username ?? 'U'} size="sm" className="rounded-full" />
+              </Link>
               <button
                 onClick={clearAuth}
                 className="hidden sm:flex btn-ghost rounded-lg px-3 py-2 text-sm !text-red-500 hover:!bg-red-50 hover:!text-red-600 dark:hover:!bg-red-900/20"
@@ -79,6 +104,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
                 </svg>
                 <span>Logout</span>
               </button>
+              </>
             ) : (
               <div className="hidden sm:flex items-center gap-1.5">
                 <Link to="/login" className="btn-ghost rounded-lg px-3 py-2 text-sm">
