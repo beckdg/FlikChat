@@ -6,7 +6,6 @@ import { getAnswersByQuestion, createAnswer, updateAnswer, deleteAnswer, voteAns
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/Button';
 import { UserAvatar } from '@/components/ui/UserAvatar';
-import { ChatRoom } from '@/components/chat/ChatRoom';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { SidebarLayout, RelatedQuestions, ActiveDiscussions } from '@/components/sidebar';
 
@@ -16,7 +15,6 @@ export const QuestionPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [answerContent, setAnswerContent] = useState('');
-  const [expandedRoom, setExpandedRoom] = useState<string | null>(null);
   const [editingQuestion, setEditingQuestion] = useState(false);
   const [editQuestionContent, setEditQuestionContent] = useState('');
   const [editingAnswer, setEditingAnswer] = useState<string | null>(null);
@@ -265,10 +263,16 @@ export const QuestionPage = () => {
             {answers.map((answer) => {
               const isOwnAnswer = answer.author.id === user?.id;
               return (
-              <div key={answer.id} className={`card overflow-hidden ${isOwnAnswer ? 'border-l-4 border-l-emerald-500' : ''}`}>
+              <div
+                key={answer.id}
+                onClick={() => {
+                  if (answer.roomId) navigate(`/discussions/${answer.roomId}`);
+                }}
+                className={`card overflow-hidden cursor-pointer transition-colors hover:border-gray-300 dark:hover:border-gray-600 ${isOwnAnswer ? 'border-l-4 border-l-emerald-500' : ''}`}
+              >
                 <div className="p-5 sm:p-6">
                   <div className="flex items-start justify-between">
-                    <Link to={`/profile/${answer.author.username}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                    <Link to={`/profile/${answer.author.username}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity" onClick={(e) => e.stopPropagation()}>
                       <UserAvatar src={answer.author.avatarUrl} username={answer.author.username} size="sm" className="rounded-full" />
                       <div>
                         <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -283,7 +287,8 @@ export const QuestionPage = () => {
                       {isOwnAnswer && (
                         <div className="flex items-center gap-0.5 mr-2">
                           <button
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               if (editingAnswer === answer.id) {
                                 setEditingAnswer(null);
                                 return;
@@ -299,7 +304,10 @@ export const QuestionPage = () => {
                             </svg>
                           </button>
                           <button
-                            onClick={() => setShowDeleteAnswerModal(answer.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowDeleteAnswerModal(answer.id);
+                            }}
                             className="flex h-7 w-7 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
@@ -309,7 +317,10 @@ export const QuestionPage = () => {
                         </div>
                       )}
                       <button
-                        onClick={() => isAuthenticated && voteAnswerMutation.mutate({ answerId: answer.id, value: answer.userVote === 1 ? 0 : 1 })}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          isAuthenticated && voteAnswerMutation.mutate({ answerId: answer.id, value: answer.userVote === 1 ? 0 : 1 });
+                        }}
                         disabled={!isAuthenticated || voteAnswerMutation.isPending}
                         className={`inline-flex items-center gap-1 text-sm transition-colors ${
                           isAuthenticated ? 'cursor-pointer' : 'cursor-default'
@@ -323,7 +334,7 @@ export const QuestionPage = () => {
                     </div>
                   </div>
                   {editingAnswer === answer.id ? (
-                    <div className="mt-3 space-y-3">
+                    <div className="mt-3 space-y-3" onClick={(e) => e.stopPropagation()}>
                       <textarea
                         className="input-field min-h-[80px] resize-y"
                         value={editAnswerContent}
@@ -342,23 +353,20 @@ export const QuestionPage = () => {
                   )}
                 </div>
 
-                <div className="border-t border-gray-100 dark:border-gray-800">
-                  <button
-                    onClick={() => setExpandedRoom(expandedRoom === answer.id ? null : answer.id)}
-                    className="flex w-full items-center gap-2 px-5 py-2.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800/50"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                      <path d="M3.505 2.365A41.369 41.369 0 019 2c1.863 0 3.697.124 5.495.365 1.247.167 2.18 1.108 2.435 2.268a4.45 4.45 0 00-.577-.069 43.141 43.141 0 00-4.706 0C9.229 4.696 7.5 6.727 7.5 8.998v2.24c0 1.413.67 2.735 1.76 3.562l-2.98 2.98A.75.75 0 015 17.25v-3.443c-.501-.048-1-.106-1.495-.172C2.033 13.438 1 12.162 1 10.655V4.706c0-1.57 1.176-2.895 2.505-2.341z" />
-                      <path d="M14.5 6.5c1.064 0 2.09.07 3.09.195 1.416.177 2.41 1.36 2.41 2.74v3.346c0 1.506-1.032 2.782-2.505 2.942-.494.066-.994.124-1.495.172v3.443a.75.75 0 01-1.28.53l-2.98-2.98a4.47 4.47 0 01-.596-.595 3.5 3.5 0 011.09-.329c.588-.083 1.187-.15 1.79-.2A4.46 4.46 0 0115 11.24v-2.24c0-1.364-.625-2.602-1.622-3.5H14.5z" />
-                    </svg>
-                    {expandedRoom === answer.id ? 'Hide Discussion' : 'Open Discussion Room'}
-                  </button>
-                  {expandedRoom === answer.id && answer.roomId && (
-                    <div className="px-5 pb-4">
-                      <ChatRoom roomId={answer.roomId} variant="preview" />
+                {answer.roomId && (
+                  <div className="border-t border-gray-100 dark:border-gray-800">
+                    <div className="flex items-center gap-1.5 px-5 py-2.5 text-xs font-medium text-primary-500">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                        <path d="M3.505 2.365A41.369 41.369 0 019 2c1.863 0 3.697.124 5.495.365 1.247.167 2.18 1.108 2.435 2.268a4.45 4.45 0 00-.577-.069 43.141 43.141 0 00-4.706 0C9.229 4.696 7.5 6.727 7.5 8.998v2.24c0 1.413.67 2.735 1.76 3.562l-2.98 2.98A.75.75 0 015 17.25v-3.443c-.501-.048-1-.106-1.495-.172C2.033 13.438 1 12.162 1 10.655V4.706c0-1.57 1.176-2.895 2.505-2.341z" />
+                        <path d="M14.5 6.5c1.064 0 2.09.07 3.09.195 1.416.177 2.41 1.36 2.41 2.74v3.346c0 1.506-1.032 2.782-2.505 2.942-.494.066-.994.124-1.495.172v3.443a.75.75 0 01-1.28.53l-2.98-2.98a4.47 4.47 0 01-.596-.595 3.5 3.5 0 011.09-.329c.588-.083 1.187-.15 1.79-.2A4.46 4.46 0 0115 11.24v-2.24c0-1.364-.625-2.602-1.622-3.5H14.5z" />
+                      </svg>
+                      View discussion
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 ml-auto">
+                        <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
+                      </svg>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             );
             })}

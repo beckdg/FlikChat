@@ -38,7 +38,7 @@ export const MyDiscussions = () => {
           {items.map((d) => (
             <Link
               key={d.roomId}
-              to={`/questions/${d.questionId}`}
+              to={`/discussions/${d.roomId}`}
               className="card group flex items-start gap-3 p-4 transition-all hover:-translate-y-0.5 hover:shadow-md"
             >
               <div className="relative mt-1 shrink-0">
