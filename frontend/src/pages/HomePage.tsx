@@ -7,7 +7,7 @@ import { useAuthStore } from '@/store/authStore';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { Button } from '@/components/ui/Button';
 import { AskQuestion } from '@/components/ui/AskQuestion';
-import { SidebarLayout, TrendingQuestions, ActiveDiscussions, QuickActions } from '@/components/sidebar';
+import { SidebarLayout, TrendingQuestions, ActiveDiscussions, QuickActions, MyDiscussions } from '@/components/sidebar';
 
 const features = [
   {
@@ -169,6 +169,8 @@ export const HomePage = () => {
             />
           </div>
         )}
+
+        <MyDiscussions />
 
         {!trendingLoading && trending.length > 0 && (
           <section>

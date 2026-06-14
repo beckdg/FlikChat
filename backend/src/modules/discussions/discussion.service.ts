@@ -115,6 +115,71 @@ export class DiscussionService {
 
     await prisma.chatMessage.delete({ where: { id: messageId } });
   }
+
+  async getMyActiveDiscussions(userId: string) {
+    const roomIds = await prisma.chatMessage.findMany({
+      where: { authorId: userId },
+      distinct: ['roomId'],
+      select: { roomId: true },
+    });
+
+    if (roomIds.length === 0) return [];
+
+    const rooms = await prisma.chatRoom.findMany({
+      where: { id: { in: roomIds.map((r) => r.roomId) } },
+      include: {
+        _count: { select: { messages: true } },
+        messages: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: { createdAt: true, content: true },
+        },
+        answer: {
+          select: {
+            id: true,
+            content: true,
+            question: { select: { id: true, title: true } },
+          },
+        },
+      },
+    });
+
+    const userLastMessageTimes = await prisma.chatMessage.groupBy({
+      by: ['roomId'],
+      where: { authorId: userId, roomId: { in: roomIds.map((r) => r.roomId) } },
+      _max: { createdAt: true },
+    });
+
+    const lastMessageMap = new Map(userLastMessageTimes.map((r) => [r.roomId, r._max.createdAt]));
+
+    const newMessageCounts = await Promise.all(
+      rooms.map(async (room) => {
+        const lastUserMsgAt = lastMessageMap.get(room.id);
+        if (!lastUserMsgAt) return { roomId: room.id, count: 0 };
+        const count = await prisma.chatMessage.count({
+          where: {
+            roomId: room.id,
+            authorId: { not: userId },
+            createdAt: { gt: lastUserMsgAt },
+          },
+        });
+        return { roomId: room.id, count };
+      })
+    );
+
+    const countMap = new Map(newMessageCounts.map((r) => [r.roomId, r.count]));
+
+    return rooms.map((room) => ({
+      roomId: room.id,
+      answerId: room.answer.id,
+      answerSnippet: room.answer.content.slice(0, 150),
+      questionId: room.answer.question.id,
+      questionTitle: room.answer.question.title,
+      totalMessages: room._count.messages,
+      newMessages: countMap.get(room.id) ?? 0,
+      lastActivity: room.messages[0]?.createdAt ?? null,
+    }));
+  }
 }
 
 export const discussionService = new DiscussionService();

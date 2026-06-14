@@ -1,5 +1,8 @@
 import { api } from './api';
-import type { ApiResponse, ChatRoom, ChatMessage, PaginatedResponse } from '@/types';
+import type { ApiResponse, ChatRoom, ChatMessage, PaginatedResponse, ActiveDiscussion } from '@/types';
+
+export const getMyActiveDiscussions = () =>
+  api.get<ApiResponse<ActiveDiscussion[]>>('/discussions/my-active').then((r) => r.data);
 
 export const getRoomByAnswerId = (answerId: string) =>
   api.get<ApiResponse<ChatRoom>>(`/discussions/answer/${answerId}`).then((r) => r.data);

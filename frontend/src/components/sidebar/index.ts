@@ -4,3 +4,4 @@ export { ActiveDiscussions } from './ActiveDiscussions';
 export { RelatedQuestions } from './RelatedQuestions';
 export { QuickActions } from './QuickActions';
 export { TopicFilters } from './TopicFilters';
+export { MyDiscussions } from './MyDiscussions';

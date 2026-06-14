@@ -83,6 +83,17 @@ export interface Notification {
   sender?: { id: string; username: string; avatarUrl: string | null } | null;
 }
 
+export interface ActiveDiscussion {
+  roomId: string;
+  answerId: string;
+  answerSnippet: string;
+  questionId: string;
+  questionTitle: string;
+  totalMessages: number;
+  newMessages: number;
+  lastActivity: string | null;
+}
+
 export interface ChatMessage {
   id: string;
   content: string;

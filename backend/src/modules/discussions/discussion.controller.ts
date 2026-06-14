@@ -77,3 +77,13 @@ export const deleteMessage = async (req: Request, res: Response, next: NextFunct
     next(error);
   }
 };
+
+export const getMyActiveDiscussions = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId } = (req as AuthenticatedRequest).user!;
+    const result = await discussionService.getMyActiveDiscussions(userId);
+    sendSuccess(res, result);
+  } catch (error) {
+    next(error);
+  }
+};
