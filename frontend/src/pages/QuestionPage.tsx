@@ -73,7 +73,7 @@ export const QuestionPage = () => {
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-3xl">
             {question.title}
           </h1>
-          <div className="mt-3 flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
             <Link to={`/profile/${question.author.username}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <UserAvatar src={question.author.avatarUrl} username={question.author.username} size="sm" className="rounded-full" />
               <span className="font-medium text-gray-700 dark:text-gray-300">{question.author.username}</span>

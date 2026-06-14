@@ -79,22 +79,22 @@ export const HomePage = () => {
         <div className="absolute inset-0 bg-grid opacity-30" />
         <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-white/[0.03] blur-3xl" />
         <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-purple-400/[0.04] blur-3xl" />
-        <div className="relative px-6 py-14 sm:px-12 sm:py-20 lg:px-16 lg:py-24">
+        <div className="relative px-5 py-12 sm:px-12 sm:py-20 lg:px-16 lg:py-24">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-medium text-white/80 backdrop-blur-sm">
             <span className="flex h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse-soft" />
             Real-time discussions
           </div>
-          <h1 className="mt-6 max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+          <h1 className="mt-5 max-w-3xl text-3xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
             Where questions meet{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-100 to-purple-200">
               real-time answers
             </span>
           </h1>
-          <p className="mt-4 max-w-2xl text-lg text-white/70 sm:text-xl">
+          <p className="mt-3 max-w-2xl text-base text-white/70 sm:text-xl">
             A Q&A platform where every answer has its own real-time discussion room.
             Ask questions, get answers, and dive deeper with live conversations.
           </p>
-          <div className="mt-8 flex flex-wrap gap-4">
+          <div className="mt-6 flex flex-wrap gap-3 sm:gap-4">
             <Link to="/register">
               <Button
                 variant="primary"
@@ -172,7 +172,7 @@ export const HomePage = () => {
 
       <section>
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
             Everything you need to{' '}
             <span className="gradient-text">learn and share</span>
           </h2>
@@ -197,7 +197,7 @@ export const HomePage = () => {
         </div>
       </section>
 
-      <section className="relative overflow-hidden rounded-3xl border border-gray-200/60 bg-gradient-to-br from-gray-50 to-white p-8 shadow-sm dark:border-gray-700/30 dark:from-gray-900/50 dark:to-gray-800/30 sm:p-12">
+      <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-gray-200/60 bg-gradient-to-br from-gray-50 to-white p-6 shadow-sm dark:border-gray-700/30 dark:from-gray-900/50 dark:to-gray-800/30 sm:p-12">
         <div className="absolute inset-0 bg-grid opacity-30 dark:opacity-10" />
         <div className="relative mx-auto max-w-2xl text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-purple-600 text-2xl font-bold text-white shadow-lg shadow-primary-500/20">
