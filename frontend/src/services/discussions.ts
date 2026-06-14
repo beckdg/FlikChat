@@ -7,6 +7,12 @@ export const getMyActiveDiscussions = () =>
 export const getRoomByAnswerId = (answerId: string) =>
   api.get<ApiResponse<ChatRoom>>(`/discussions/answer/${answerId}`).then((r) => r.data);
 
+export const getRoomById = (roomId: string) =>
+  api.get<ApiResponse<any>>(`/discussions/${roomId}`).then((r) => r.data);
+
+export const getRoomParticipants = (roomId: string) =>
+  api.get<ApiResponse<Array<{ userId: string; username: string; joinedAt: string }>>>(`/discussions/${roomId}/participants`).then((r) => r.data);
+
 export const getMessages = (roomId: string, page = 1, limit = 50) =>
   api.get<ApiResponse<PaginatedResponse<ChatMessage>>>(`/discussions/${roomId}/messages`, {
     params: { page, limit },

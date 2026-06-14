@@ -355,7 +355,7 @@ export const QuestionPage = () => {
                   </button>
                   {expandedRoom === answer.id && answer.roomId && (
                     <div className="px-5 pb-4">
-                      <ChatRoom roomId={answer.roomId} />
+                      <ChatRoom roomId={answer.roomId} variant="preview" />
                     </div>
                   )}
                 </div>

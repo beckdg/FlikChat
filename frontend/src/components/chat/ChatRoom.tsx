@@ -10,9 +10,12 @@ import type { ChatMessage } from '@/types';
 
 interface ChatRoomProps {
   roomId: string;
+  variant?: 'full' | 'preview';
 }
 
-export const ChatRoom = ({ roomId }: ChatRoomProps) => {
+const PREVIEW_MAX = 5;
+
+export const ChatRoom = ({ roomId, variant = 'full' }: ChatRoomProps) => {
   const { user, isAuthenticated } = useAuthStore();
   const queryClient = useQueryClient();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -83,10 +86,10 @@ export const ChatRoom = ({ roomId }: ChatRoomProps) => {
   }, [roomId, handleNewMessage, handleMessageUpdated, handleMessageDeleted]);
 
   useEffect(() => {
-    if (listRef.current) {
+    if (variant === 'full' && listRef.current) {
       listRef.current.scrollTop = listRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, variant]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,19 +111,42 @@ export const ChatRoom = ({ roomId }: ChatRoomProps) => {
 
   if (!roomId) return null;
 
-  return (
-    <div className="mt-4 rounded-xl border border-gray-200/60 bg-gray-50/50 dark:border-gray-700/30 dark:bg-gray-900/30">
-      <div className="flex items-center gap-2 border-b border-gray-200/60 px-4 py-3 dark:border-gray-700/30">
-        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-primary-400 to-purple-500 text-[10px] font-bold text-white">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
-            <path d="M2.97 2.31a3.507 3.507 0 00-.47 0 1.5 1.5 0 00-1.485 1.522c0 .116.013.23.038.34L3.8 10.69a1.5 1.5 0 001.42.98h.041a1.5 1.5 0 001.389-.874l1.864-3.504a1.5 1.5 0 00-.027-1.42L6.34 2.917a1.5 1.5 0 00-1.179-.647 4.21 4.21 0 00-.096 0 5.491 5.491 0 00-1.454.338c-.219.088-.44.174-.663.248.098-.024.2-.04.306-.053.127-.016.256-.02.384-.02h.424z" />
-            <path d="M11.78 5.5a.75.75 0 00-.733-.633 5.5 5.5 0 00-1.133.066c-.352.064-.702.164-1.042.294l.75 1.348c.424.215.912.305 1.407.24.164-.021.326-.056.482-.102a6.47 6.47 0 00-.08.107l-1.73 3.252a1.5 1.5 0 00.026 1.414l1.047 1.882a.75.75 0 001.31-.73l-.89-1.6a.245.245 0 01.04-.277.24.24 0 01.278-.04l2.573 1.43a.75.75 0 10.688-1.333l-2.33-1.294.064-.12a4.414 4.414 0 001.49-3.342c0-.23-.014-.46-.042-.688a5.43 5.43 0 00-.65-1.78z" />
-          </svg>
-        </div>
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Discussion Room</span>
-      </div>
+  const displayMessages = variant === 'preview' ? messages.slice(-PREVIEW_MAX) : messages;
 
-      <div ref={listRef} className="h-64 overflow-y-auto px-4 py-3 space-y-3">
+  return (
+    <div className="rounded-xl border border-gray-200/60 bg-gray-50/50 dark:border-gray-700/30 dark:bg-gray-900/30">
+      {variant === 'full' && (
+        <div className="flex items-center gap-2 border-b border-gray-200/60 px-4 py-3 dark:border-gray-700/30">
+          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-primary-400 to-purple-500 text-[10px] font-bold text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
+              <path d="M2.97 2.31a3.507 3.507 0 00-.47 0 1.5 1.5 0 00-1.485 1.522c0 .116.013.23.038.34L3.8 10.69a1.5 1.5 0 001.42.98h.041a1.5 1.5 0 001.389-.874l1.864-3.504a1.5 1.5 0 00-.027-1.42L6.34 2.917a1.5 1.5 0 00-1.179-.647 4.21 4.21 0 00-.096 0 5.491 5.491 0 00-1.454.338c-.219.088-.44.174-.663.248.098-.024.2-.04.306-.053.127-.016.256-.02.384-.02h.424z" />
+              <path d="M11.78 5.5a.75.75 0 00-.733-.633 5.5 5.5 0 00-1.133.066c-.352.064-.702.164-1.042.294l.75 1.348c.424.215.912.305 1.407.24.164-.021.326-.056.482-.102a6.47 6.47 0 00-.08.107l-1.73 3.252a1.5 1.5 0 00.026 1.414l1.047 1.882a.75.75 0 001.31-.73l-.89-1.6a.245.245 0 01.04-.277.24.24 0 01.278-.04l2.573 1.43a.75.75 0 10.688-1.333l-2.33-1.294.064-.12a4.414 4.414 0 001.49-3.342c0-.23-.014-.46-.042-.688a5.43 5.43 0 00-.65-1.78z" />
+            </svg>
+          </div>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Discussion Room</span>
+          <span className="ml-auto text-xs text-gray-400">{messages.length} message{messages.length !== 1 ? 's' : ''}</span>
+        </div>
+      )}
+
+      {variant === 'preview' && (
+        <div className="flex items-center gap-2 px-4 py-2.5">
+          <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-primary-400 to-purple-500 text-[9px] font-bold text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-2.5 w-2.5">
+              <path d="M2.97 2.31a3.507 3.507 0 00-.47 0 1.5 1.5 0 00-1.485 1.522c0 .116.013.23.038.34L3.8 10.69a1.5 1.5 0 001.42.98h.041a1.5 1.5 0 001.389-.874l1.864-3.504a1.5 1.5 0 00-.027-1.42L6.34 2.917a1.5 1.5 0 00-1.179-.647 4.21 4.21 0 00-.096 0 5.491 5.491 0 00-1.454.338c-.219.088-.44.174-.663.248.098-.024.2-.04.306-.053.127-.016.256-.02.384-.02h.424z" />
+              <path d="M11.78 5.5a.75.75 0 00-.733-.633 5.5 5.5 0 00-1.133.066c-.352.064-.702.164-1.042.294l.75 1.348c.424.215.912.305 1.407.24.164-.021.326-.056.482-.102a6.47 6.47 0 00-.08.107l-1.73 3.252a1.5 1.5 0 00.026 1.414l1.047 1.882a.75.75 0 001.31-.73l-.89-1.6a.245.245 0 01.04-.277.24.24 0 01.278-.04l2.573 1.43a.75.75 0 10.688-1.333l-2.33-1.294.064-.12a4.414 4.414 0 001.49-3.342c0-.23-.014-.46-.042-.688a5.43 5.43 0 00-.65-1.78z" />
+            </svg>
+          </div>
+          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Discussion</span>
+          {messages.length > PREVIEW_MAX && (
+            <span className="text-[11px] text-gray-400">+{messages.length - PREVIEW_MAX} more</span>
+          )}
+        </div>
+      )}
+
+      <div
+        ref={listRef}
+        className={`overflow-y-auto px-4 py-3 space-y-3 ${variant === 'preview' ? 'max-h-48' : 'h-64'}`}
+      >
         {isLoading ? (
           <div className="flex items-center justify-center py-8 text-sm text-gray-400">
             Loading messages...
@@ -130,7 +156,7 @@ export const ChatRoom = ({ roomId }: ChatRoomProps) => {
             No messages yet. Start the conversation!
           </div>
         ) : (
-          messages.map((msg) => {
+          displayMessages.map((msg) => {
             const isOwn = msg.author.id === user?.id;
             const isRevealed = revealedMsgId === msg.id;
             return (
@@ -148,7 +174,7 @@ export const ChatRoom = ({ roomId }: ChatRoomProps) => {
                         : 'bg-white text-gray-700 shadow-sm rounded-bl-md dark:bg-gray-800 dark:text-gray-200'
                     }`}
                     onClick={() => {
-                      if (isOwn && !editingMsgId) {
+                      if (isOwn && !editingMsgId && variant === 'full') {
                         setRevealedMsgId(isRevealed ? null : msg.id);
                       }
                     }}
@@ -245,7 +271,21 @@ export const ChatRoom = ({ roomId }: ChatRoomProps) => {
         )}
       </div>
 
-      {isAuthenticated ? (
+      {variant === 'preview' && messages.length > 0 && (
+        <div className="border-t border-gray-200/60 px-4 py-2.5 dark:border-gray-700/30">
+          <Link
+            to={`/discussions/${roomId}`}
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary-50 py-2 text-xs font-medium text-primary-600 transition-colors hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30"
+          >
+            Open full discussion
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+              <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
+            </svg>
+          </Link>
+        </div>
+      )}
+
+      {variant === 'full' && isAuthenticated ? (
         <form onSubmit={handleSend} className="flex items-center gap-2 border-t border-gray-200/60 px-4 py-3 dark:border-gray-700/30">
           <input
             className="input-field !rounded-full !py-2"
@@ -264,11 +304,11 @@ export const ChatRoom = ({ roomId }: ChatRoomProps) => {
             </svg>
           </button>
         </form>
-      ) : (
+      ) : variant === 'full' ? (
         <div className="border-t border-gray-200/60 px-4 py-3 text-center text-sm text-gray-400 dark:border-gray-700/30">
           Sign in to join the discussion
         </div>
-      )}
+      ) : null}
     </div>
   );
 };

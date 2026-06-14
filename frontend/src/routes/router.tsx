@@ -4,6 +4,7 @@ import {
   HomePage,
   QuestionsPage,
   QuestionPage,
+  DiscussionPage,
   LoginPage,
   RegisterPage,
   ProfilePage,
@@ -56,6 +57,14 @@ export const router = createBrowserRouter([
     element: (
       <MainLayout>
         <ProfilePage />
+      </MainLayout>
+    ),
+  },
+  {
+    path: '/discussions/:roomId',
+    element: (
+      <MainLayout>
+        <DiscussionPage />
       </MainLayout>
     ),
   },

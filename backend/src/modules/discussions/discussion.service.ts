@@ -22,6 +22,27 @@ export class DiscussionService {
     return room;
   }
 
+  async getRoomById(roomId: string) {
+    const room = await prisma.chatRoom.findUnique({
+      where: { id: roomId },
+      include: {
+        answer: {
+          select: {
+            id: true,
+            content: true,
+            authorId: true,
+            createdAt: true,
+            author: { select: { id: true, username: true, avatarUrl: true } },
+            question: { select: { id: true, title: true, content: true, authorId: true } },
+          },
+        },
+        _count: { select: { messages: true } },
+      },
+    });
+    if (!room) throw new AppError(404, 'Chat room not found');
+    return room;
+  }
+
   async getMessages(roomId: string, page = 1, limit = 50) {
     const room = await prisma.chatRoom.findUnique({ where: { id: roomId } });
     if (!room) throw new AppError(404, 'Chat room not found');

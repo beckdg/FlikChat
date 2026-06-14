@@ -2,13 +2,22 @@ import { Request, Response, NextFunction } from 'express';
 import { discussionService } from './discussion.service';
 import { sendSuccess } from '../../utils/response';
 import type { AuthenticatedRequest } from '../../middleware/auth.middleware';
-import { getIO } from '../../sockets';
+import { getIO, getRoomParticipants as getSocketParticipants } from '../../sockets';
 import { prisma } from '../../config/database';
 import { AppError } from '../../utils/errors';
 
 export const getRoomByAnswerId = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await discussionService.getRoomByAnswerId(req.params.answerId as string);
+    sendSuccess(res, result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getRoomById = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await discussionService.getRoomById(req.params.roomId as string);
     sendSuccess(res, result);
   } catch (error) {
     next(error);
@@ -83,6 +92,15 @@ export const getMyActiveDiscussions = async (req: Request, res: Response, next: 
     const { userId } = (req as AuthenticatedRequest).user!;
     const result = await discussionService.getMyActiveDiscussions(userId);
     sendSuccess(res, result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getRoomParticipants = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const participants = getSocketParticipants(req.params.roomId as string);
+    sendSuccess(res, participants);
   } catch (error) {
     next(error);
   }
