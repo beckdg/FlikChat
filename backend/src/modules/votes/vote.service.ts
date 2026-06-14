@@ -1,5 +1,6 @@
 import { prisma } from '../../config/database';
 import { AppError } from '../../utils/errors';
+import { notificationService } from '../notifications/notification.service';
 import type { CreateVoteDto } from './vote.validator';
 import type { VoteSummary } from './vote.types';
 
@@ -29,6 +30,18 @@ export class VoteService {
     await prisma.vote.create({
       data: { answerId, userId, value },
     });
+
+    if (value === 1 && answer.authorId !== userId) {
+      const sender = await prisma.user.findUnique({ where: { id: userId }, select: { username: true } });
+      notificationService.create({
+        userId: answer.authorId,
+        type: 'answer_liked',
+        title: 'Answer Liked',
+        message: `${sender?.username ?? 'Someone'} liked your answer on "${(await prisma.question.findUnique({ where: { id: answer.questionId }, select: { title: true } }))?.title?.slice(0, 80) ?? 'a question'}"`,
+        link: `/questions/${answer.questionId}`,
+        senderId: userId,
+      });
+    }
 
     return { voted: true, value };
   }

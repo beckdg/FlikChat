@@ -18,11 +18,13 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  questions     Question[]
-  answers       Answer[]
-  chatMessages  ChatMessage[]
-  votes         Vote[]
-  questionVotes QuestionVote[]
+  questions        Question[]
+  answers          Answer[]
+  chatMessages     ChatMessage[]
+  votes            Vote[]
+  questionVotes    QuestionVote[]
+  notifications    Notification[] @relation("received_notifications")
+  sentNotifications Notification[] @relation("sent_notifications")
 
   @@map("users")
 }
@@ -112,6 +114,23 @@ model QuestionVote {
 
   @@unique([questionId, userId])
   @@map("question_votes")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  link      String?
+  read      Boolean  @default(false)
+  senderId  String?
+  createdAt DateTime @default(now())
+
+  user   User  @relation(fields: [userId], references: [id], onDelete: Cascade, name: "received_notifications")
+  sender User? @relation(fields: [senderId], references: [id], onDelete: SetNull, name: "sent_notifications")
+
+  @@map("notifications")
 }
 
 model Tag {

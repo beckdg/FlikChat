@@ -6,6 +6,7 @@ import questionRoutes from '../modules/questions/question.routes';
 import answerRoutes from '../modules/answers/answer.routes';
 import discussionRoutes from '../modules/discussions/discussion.routes';
 import voteRoutes from '../modules/votes/vote.routes';
+import notificationRoutes from '../modules/notifications/notification.routes';
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use('/questions', questionRoutes);
 router.use('/answers', answerRoutes);
 router.use('/discussions', discussionRoutes);
 router.use('/votes', voteRoutes);
+router.use('/notifications', notificationRoutes);
 
 export default router;

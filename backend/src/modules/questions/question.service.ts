@@ -1,5 +1,6 @@
 import { prisma } from '../../config/database';
 import { AppError } from '../../utils/errors';
+import { notificationService } from '../notifications/notification.service';
 import type { CreateQuestionDto, UpdateQuestionDto } from './question.validator';
 
 const questionInclude = {
@@ -185,6 +186,19 @@ export class QuestionService {
 
     await prisma.questionVote.create({ data: { questionId, userId } });
     const count = await prisma.questionVote.count({ where: { questionId } });
+
+    if (question.authorId !== userId) {
+      const sender = await prisma.user.findUnique({ where: { id: userId }, select: { username: true } });
+      notificationService.create({
+        userId: question.authorId,
+        type: 'question_liked',
+        title: 'Question Liked',
+        message: `${sender?.username ?? 'Someone'} liked your question "${question.title.slice(0, 80)}"`,
+        link: `/questions/${questionId}`,
+        senderId: userId,
+      });
+    }
+
     return { liked: true, likeCount: count };
   }
 }

@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { useTheme } from '@/context/ThemeContext';
 import { UserAvatar } from '@/components/ui/UserAvatar';
+import { NotificationBell } from '@/components/ui/NotificationBell';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 interface MainLayoutProps {
@@ -90,6 +91,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
 
             {isAuthenticated ? (
               <>
+              <NotificationBell />
               <Link
                 to="/profile"
                 className="hidden sm:flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 hover:scale-110"

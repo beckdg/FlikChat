@@ -3,6 +3,7 @@ import { Server, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
 import { prisma } from '../config/database';
+import { notificationService } from '../modules/notifications/notification.service';
 
 let io: Server | null = null;
 
@@ -44,6 +45,10 @@ export const initializeSocket = (httpServer: HttpServer): Server => {
     const userLabel = socket.userId ?? 'anonymous';
     console.log(`[Socket] ${userLabel} connected: ${socket.id}`);
 
+    if (socket.userId) {
+      socket.join(`user:${socket.userId}`);
+    }
+
     socket.on('join_room', (payload: { roomId: string }) => {
       socket.join(payload.roomId);
       console.log(`[Socket] ${userLabel} joined room: ${payload.roomId}`);
@@ -74,6 +79,22 @@ export const initializeSocket = (httpServer: HttpServer): Server => {
         });
 
         io!.to(payload.roomId).emit('new_message', message);
+
+        const previousAuthors = await prisma.chatMessage.findMany({
+          where: { roomId: payload.roomId, authorId: { not: socket.userId } },
+          distinct: ['authorId'],
+          select: { authorId: true },
+        });
+
+        for (const { authorId: targetId } of previousAuthors) {
+          notificationService.create({
+            userId: targetId,
+            type: 'message_reply',
+            title: 'New Reply',
+            message: `${message.author.username} replied in a discussion you're part of`,
+            senderId: socket.userId,
+          });
+        }
       } catch (err) {
         console.error('[Socket] Error sending message:', err);
         socket.emit('error', { message: 'Failed to send message' });

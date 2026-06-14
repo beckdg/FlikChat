@@ -70,6 +70,19 @@ export interface ChatRoom {
   updatedAt: string;
 }
 
+export interface Notification {
+  id: string;
+  userId: string;
+  type: string;
+  title: string;
+  message: string;
+  link?: string | null;
+  read: boolean;
+  senderId?: string | null;
+  createdAt: string;
+  sender?: { id: string; username: string; avatarUrl: string | null } | null;
+}
+
 export interface ChatMessage {
   id: string;
   content: string;

@@ -1,5 +1,6 @@
 import { prisma } from '../../config/database';
 import { AppError } from '../../utils/errors';
+import { notificationService } from '../notifications/notification.service';
 import type { CreateAnswerDto, UpdateAnswerDto } from './answer.validator';
 
 export class AnswerService {
@@ -73,6 +74,17 @@ export class AnswerService {
     const chatRoom = await prisma.chatRoom.create({
       data: { answerId: answer.id },
     });
+
+    if (question.authorId !== authorId) {
+      notificationService.create({
+        userId: question.authorId,
+        type: 'new_answer',
+        title: 'New Answer',
+        message: `${answer.author.username} answered your question "${question.title.slice(0, 80)}"`,
+        link: `/questions/${data.questionId}`,
+        senderId: authorId,
+      });
+    }
 
     return { ...answer, roomId: chatRoom.id, voteCount: 0, userVote: 0 };
   }

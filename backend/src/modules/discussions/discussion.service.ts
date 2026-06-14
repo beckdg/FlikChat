@@ -1,5 +1,6 @@
 import { prisma } from '../../config/database';
 import { AppError } from '../../utils/errors';
+import { notificationService } from '../notifications/notification.service';
 import type { SendMessageDto } from './discussion.validator';
 
 export class DiscussionService {
@@ -65,6 +66,28 @@ export class DiscussionService {
         author: { select: { id: true, username: true, avatarUrl: true } },
       },
     });
+
+    const previousAuthors = await prisma.chatMessage.findMany({
+      where: { roomId: data.roomId, authorId: { not: authorId } },
+      distinct: ['authorId'],
+      select: { authorId: true },
+    });
+
+    const answer = await prisma.answer.findUnique({
+      where: { id: room.answerId },
+      select: { questionId: true },
+    });
+
+    for (const { authorId: targetId } of previousAuthors) {
+      notificationService.create({
+        userId: targetId,
+        type: 'message_reply',
+        title: 'New Reply',
+        message: `${message.author.username} replied in a discussion you're part of`,
+        link: answer ? `/questions/${answer.questionId}` : undefined,
+        senderId: authorId,
+      });
+    }
 
     return message;
   }
