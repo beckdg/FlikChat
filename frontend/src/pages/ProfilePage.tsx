@@ -16,6 +16,7 @@ export const ProfilePage = () => {
   const [editUsername, setEditUsername] = useState('');
   const [editBio, setEditBio] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const avatarRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
 
@@ -249,7 +250,17 @@ export const ProfilePage = () => {
       </div>
 
       {isOwnProfile && (
-        <div className="border-t border-gray-200/60 pt-6 dark:border-gray-700/30">
+        <div className="border-t border-gray-200/60 pt-6 space-y-3 dark:border-gray-700/30">
+          <button
+            onClick={() => setShowLogoutModal(true)}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 transition-all hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800/50"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+              <path fillRule="evenodd" d="M17 4.25A2.25 2.25 0 0014.75 2h-5.5A2.25 2.25 0 007 4.25v2a.75.75 0 001.5 0v-2a.75.75 0 01.75-.75h5.5a.75.75 0 01.75.75v11.5a.75.75 0 01-.75.75h-5.5a.75.75 0 01-.75-.75v-2a.75.75 0 00-1.5 0v2A2.25 2.25 0 009.25 18h5.5A2.25 2.25 0 0017 15.75V4.25z" clipRule="evenodd" />
+              <path fillRule="evenodd" d="M1 10a.75.75 0 01.75-.75h9.546l-1.048-.943a.75.75 0 111.004-1.114l2.5 2.25a.75.75 0 010 1.114l-2.5 2.25a.75.75 0 11-1.004-1.114l1.048-.943H1.75A.75.75 0 011 10z" clipRule="evenodd" />
+            </svg>
+            Logout
+          </button>
           <button
             onClick={() => setShowDeleteModal(true)}
             className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-red-200 px-4 py-3 text-sm font-semibold text-red-600 transition-all hover:bg-red-50 dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-900/20"
@@ -271,6 +282,18 @@ export const ProfilePage = () => {
         warning="All your questions, answers, chat rooms, messages, votes, and profile data will be permanently deleted. You will lose access to all content immediately."
         confirmLabel={deleteAccountMutation.isPending ? 'Deleting...' : 'Delete Account'}
         isLoading={deleteAccountMutation.isPending}
+      />
+
+      <ConfirmModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={() => {
+          clearAuth();
+          navigate('/');
+        }}
+        title="Logout"
+        message="Are you sure you want to log out?"
+        confirmLabel="Logout"
       />
     </div>
   );

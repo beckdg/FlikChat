@@ -1,10 +1,9 @@
-import { useState, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { useTheme } from '@/context/ThemeContext';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { NotificationBell } from '@/components/ui/NotificationBell';
-import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -33,10 +32,9 @@ const bottomItems = [
 ];
 
 export const MainLayout = ({ children }: MainLayoutProps) => {
-  const { isAuthenticated, user, clearAuth } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
@@ -94,20 +92,10 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
               <NotificationBell />
               <Link
                 to="/profile"
-                className="hidden sm:flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 hover:scale-110"
+                className="flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 hover:scale-110"
               >
                 <UserAvatar src={user?.avatarUrl} username={user?.username ?? 'U'} size="sm" className="rounded-full" />
               </Link>
-              <button
-                onClick={() => setShowLogoutModal(true)}
-                className="hidden sm:flex btn-ghost rounded-lg px-3 py-2 text-sm !text-red-500 hover:!bg-red-50 hover:!text-red-600 dark:hover:!bg-red-900/20"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 sm:mr-1">
-                  <path fillRule="evenodd" d="M17 4.25A2.25 2.25 0 0014.75 2h-5.5A2.25 2.25 0 007 4.25v2a.75.75 0 001.5 0v-2a.75.75 0 01.75-.75h5.5a.75.75 0 01.75.75v11.5a.75.75 0 01-.75.75h-5.5a.75.75 0 01-.75-.75v-2a.75.75 0 00-1.5 0v2A2.25 2.25 0 009.25 18h5.5A2.25 2.25 0 0017 15.75V4.25z" clipRule="evenodd" />
-                  <path fillRule="evenodd" d="M1 10a.75.75 0 01.75-.75h9.546l-1.048-.943a.75.75 0 111.004-1.114l2.5 2.25a.75.75 0 010 1.114l-2.5 2.25a.75.75 0 11-1.004-1.114l1.048-.943H1.75A.75.75 0 011 10z" clipRule="evenodd" />
-                </svg>
-                <span>Logout</span>
-              </button>
               </>
             ) : (
               <div className="hidden sm:flex items-center gap-1.5">
@@ -173,21 +161,6 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
         </div>
       </nav>
 
-      {isAuthenticated && (
-        <div className="fixed bottom-16 right-4 z-50 sm:hidden">
-          <button
-            onClick={() => setShowLogoutModal(true)}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500 text-white shadow-lg shadow-red-500/30 transition-all duration-200 hover:bg-red-600 active:scale-95"
-            aria-label="Logout"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
-              <path fillRule="evenodd" d="M17 4.25A2.25 2.25 0 0014.75 2h-5.5A2.25 2.25 0 007 4.25v2a.75.75 0 001.5 0v-2a.75.75 0 01.75-.75h5.5a.75.75 0 01.75.75v11.5a.75.75 0 01-.75.75h-5.5a.75.75 0 01-.75-.75v-2a.75.75 0 00-1.5 0v2A2.25 2.25 0 009.25 18h5.5A2.25 2.25 0 0017 15.75V4.25z" clipRule="evenodd" />
-              <path fillRule="evenodd" d="M1 10a.75.75 0 01.75-.75h9.546l-1.048-.943a.75.75 0 111.004-1.114l2.5 2.25a.75.75 0 010 1.114l-2.5 2.25a.75.75 0 11-1.004-1.114l1.048-.943H1.75A.75.75 0 011 10z" clipRule="evenodd" />
-            </svg>
-          </button>
-        </div>
-      )}
-
       <footer className="hidden sm:block border-t border-gray-200/50 bg-white/30 backdrop-blur-xl transition-colors duration-300 dark:border-gray-700/30 dark:bg-gray-900/30">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
           <div className="grid gap-8 sm:grid-cols-3">
@@ -232,18 +205,6 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
           </div>
         </div>
       </footer>
-
-      <ConfirmModal
-        isOpen={showLogoutModal}
-        onClose={() => setShowLogoutModal(false)}
-        onConfirm={() => {
-          clearAuth();
-          setShowLogoutModal(false);
-        }}
-        title="Logout"
-        message="Are you sure you want to log out?"
-        confirmLabel="Logout"
-      />
     </div>
   );
 };
