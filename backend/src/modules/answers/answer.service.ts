@@ -3,15 +3,21 @@ import { AppError } from '../../utils/errors';
 import type { CreateAnswerDto, UpdateAnswerDto } from './answer.validator';
 
 export class AnswerService {
-  async getByQuestionId(questionId: string) {
+  async getByQuestionId(questionId: string, userId?: string) {
+    const include: any = {
+      author: { select: { id: true, username: true, avatarUrl: true } },
+      chatRoom: { select: { id: true } },
+      _count: { select: { votes: true } },
+    };
+
+    if (userId) {
+      include.votes = { where: { userId }, select: { value: true } };
+    }
+
     const answers = await prisma.answer.findMany({
       where: { questionId },
       orderBy: { createdAt: 'desc' },
-      include: {
-        author: { select: { id: true, username: true, avatarUrl: true } },
-        chatRoom: { select: { id: true } },
-        _count: { select: { votes: true } },
-      },
+      include,
     });
 
     const question = await prisma.question.findUnique({
@@ -20,11 +26,15 @@ export class AnswerService {
     });
     if (!question) throw new AppError(404, 'Question not found');
 
-    return answers.map(({ _count, chatRoom, ...a }) => ({
-      ...a,
-      voteCount: _count.votes,
-      roomId: chatRoom?.id ?? null,
-    }));
+    return answers.map((a: any) => {
+      const { _count, chatRoom, votes, ...rest } = a;
+      return {
+        ...rest,
+        voteCount: _count.votes,
+        roomId: chatRoom?.id ?? null,
+        userVote: userId ? (votes?.[0]?.value ?? 0) : 0,
+      };
+    });
   }
 
   async getById(id: string) {
@@ -40,7 +50,7 @@ export class AnswerService {
     if (!answer) throw new AppError(404, 'Answer not found');
 
     const { _count, chatRoom, ...rest } = answer;
-    return { ...rest, voteCount: _count.votes, roomId: chatRoom?.id ?? null };
+    return { ...rest, voteCount: _count.votes, roomId: chatRoom?.id ?? null, userVote: 0 };
   }
 
   async create(authorId: string, data: CreateAnswerDto) {
@@ -64,7 +74,7 @@ export class AnswerService {
       data: { answerId: answer.id },
     });
 
-    return { ...answer, roomId: chatRoom.id, voteCount: 0 };
+    return { ...answer, roomId: chatRoom.id, voteCount: 0, userVote: 0 };
   }
 
   async update(id: string, authorId: string, data: UpdateAnswerDto) {

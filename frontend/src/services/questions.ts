@@ -14,8 +14,8 @@ export const getQuestions = (page = 1, limit = 20, filters?: QuestionFilters) =>
 export const getTrendingQuestions = () =>
   api.get<ApiResponse<Question[]>>('/questions/trending').then((r) => r.data);
 
-export const getQuestionById = (id: string) =>
-  api.get<ApiResponse<Question>>(`/questions/${id}`).then((r) => r.data);
+export const getQuestionById = (id: string, userId?: string) =>
+  api.get<ApiResponse<Question>>(`/questions/${id}`, { params: { ...(userId ? { userId } : {}) } }).then((r) => r.data);
 
 export interface CreateQuestionInput {
   title: string;
@@ -32,3 +32,6 @@ export const updateQuestion = (id: string, data: { title?: string; content?: str
 
 export const deleteQuestion = (id: string) =>
   api.delete<ApiResponse<void>>(`/questions/${id}`).then((r) => r.data);
+
+export const toggleQuestionLike = (id: string) =>
+  api.post<ApiResponse<{ liked: boolean; likeCount: number }>>(`/questions/${id}/like`).then((r) => r.data);

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { questionService } from './question.service';
+import { prisma } from '../../config/database';
 import { sendSuccess } from '../../utils/response';
 import type { AuthenticatedRequest } from '../../middleware/auth.middleware';
 
@@ -11,16 +12,18 @@ export const getQuestions = async (req: Request, res: Response, next: NextFuncti
     const type = (req.query.type as string) || undefined;
     const sortBy = (req.query.sortBy as string) || 'newest';
     const sortOrder = (req.query.sortOrder as string) || 'desc';
-    const result = await questionService.getAll(page, limit, { search, type, sortBy, sortOrder });
+    const userId = req.query.userId as string | undefined;
+    const result = await questionService.getAll(page, limit, { search, type, sortBy, sortOrder }, userId);
     sendSuccess(res, result);
   } catch (error) {
     next(error);
   }
 };
 
-export const getTrendingQuestions = async (_req: Request, res: Response, next: NextFunction) => {
+export const getTrendingQuestions = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await questionService.getTrending();
+    const userId = req.query.userId as string | undefined;
+    const result = await questionService.getTrending(5, userId);
     sendSuccess(res, result);
   } catch (error) {
     next(error);
@@ -29,7 +32,8 @@ export const getTrendingQuestions = async (_req: Request, res: Response, next: N
 
 export const getQuestionById = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await questionService.getById(req.params.id as string);
+    const userId = req.query.userId as string | undefined;
+    const result = await questionService.getById(req.params.id as string, userId);
     sendSuccess(res, result);
   } catch (error) {
     next(error);
@@ -61,6 +65,16 @@ export const deleteQuestion = async (req: Request, res: Response, next: NextFunc
     const { userId } = (req as AuthenticatedRequest).user!;
     await questionService.delete(req.params.id as string, userId);
     sendSuccess(res, undefined, 'Question deleted');
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const likeQuestion = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId } = (req as AuthenticatedRequest).user!;
+    const result = await questionService.toggleLike(req.params.id as string, userId);
+    sendSuccess(res, result);
   } catch (error) {
     next(error);
   }

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getQuestionById, updateQuestion, deleteQuestion } from '@/services/questions';
-import { getAnswersByQuestion, createAnswer, updateAnswer, deleteAnswer } from '@/services/answers';
+import { getQuestionById, updateQuestion, deleteQuestion, toggleQuestionLike } from '@/services/questions';
+import { getAnswersByQuestion, createAnswer, updateAnswer, deleteAnswer, voteAnswer } from '@/services/answers';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/Button';
 import { UserAvatar } from '@/components/ui/UserAvatar';
@@ -19,16 +19,17 @@ export const QuestionPage = () => {
   const [editQuestionContent, setEditQuestionContent] = useState('');
   const [editingAnswer, setEditingAnswer] = useState<string | null>(null);
   const [editAnswerContent, setEditAnswerContent] = useState('');
+  const userId = user?.id;
 
   const { data: qData, isLoading: qLoading } = useQuery({
     queryKey: ['question', id],
-    queryFn: () => getQuestionById(id!),
+    queryFn: () => getQuestionById(id!, userId),
     enabled: !!id,
   });
 
   const { data: aData, isLoading: aLoading } = useQuery({
-    queryKey: ['answers', id],
-    queryFn: () => getAnswersByQuestion(id!),
+    queryKey: ['answers', id, userId],
+    queryFn: () => getAnswersByQuestion(id!, userId),
     enabled: !!id,
   });
 
@@ -51,6 +52,40 @@ export const QuestionPage = () => {
   const deleteQuestionMutation = useMutation({
     mutationFn: () => deleteQuestion(id!),
     onSuccess: () => navigate('/questions'),
+  });
+
+  const likeQuestionMutation = useMutation({
+    mutationFn: () => toggleQuestionLike(id!),
+    onSuccess: (res) => {
+      queryClient.setQueryData(['question', id], (old: any) => {
+        if (!old?.data) return old;
+        return {
+          ...old,
+          data: { ...old.data, likedByUser: res.data?.liked, likeCount: res.data?.likeCount },
+        };
+      });
+    },
+  });
+
+  const voteAnswerMutation = useMutation({
+    mutationFn: ({ answerId, value }: { answerId: string; value: number }) => voteAnswer(answerId, value),
+    onSuccess: (res, vars) => {
+      queryClient.setQueryData(['answers', id, userId], (old: any) => {
+        if (!old?.data) return old;
+        return {
+          ...old,
+          data: old.data.map((a: any) =>
+            a.id === vars.answerId
+              ? {
+                  ...a,
+                  userVote: res.data?.voted ? vars.value : 0,
+                  voteCount: res.data?.voted ? a.voteCount + (a.userVote === 0 ? 1 : 0) : a.voteCount - 1,
+                }
+              : a,
+          ),
+        };
+      });
+    },
   });
 
   const updateAnswerMutation = useMutation({
@@ -156,6 +191,19 @@ export const QuestionPage = () => {
             <span>{new Date(question.createdAt).toLocaleDateString()}</span>
             <span className="text-gray-300 dark:text-gray-600">·</span>
             <span>{question.answerCount ?? 0} answers</span>
+            <span className="text-gray-300 dark:text-gray-600">·</span>
+            <button
+              onClick={() => isAuthenticated && likeQuestionMutation.mutate()}
+              disabled={!isAuthenticated || likeQuestionMutation.isPending}
+              className={`inline-flex items-center gap-1 transition-colors ${
+                isAuthenticated ? 'cursor-pointer hover:text-primary-500' : 'cursor-default'
+              } ${question.likedByUser ? 'text-primary-500' : 'text-gray-500 dark:text-gray-400'}`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                <path d="M1 8.25a1.25 1.25 0 112.5 0v7.5a1.25 1.25 0 11-2.5 0v-7.5zM11 3V1.7c0-.268.14-.526.395-.607A2 2 0 0114 3c0 .995-.182 1.948-.514 2.826-.204.54.166 1.174.744 1.174h2.52c1.243 0 2.261 1.01 2.146 2.247a23.864 23.864 0 01-1.341 5.974C17.153 16.323 16.072 17 14.9 17h-3.192a3 3 0 01-1.341-.317l-2.734-1.366A3 3 0 006.292 15H5V8h.963c.685 0 1.258-.483 1.612-1.068a4.011 4.011 0 012.166-1.73c.432-.143.853-.386 1.011-.814.16-.432.248-.9.248-1.388z" />
+              </svg>
+              <span>{question.likeCount ?? 0}</span>
+            </button>
           </div>
           {editingQuestion ? (
             <div className="mt-4 space-y-3">
@@ -255,12 +303,18 @@ export const QuestionPage = () => {
                           </button>
                         </div>
                       )}
-                      <div className="flex items-center gap-1 text-sm text-gray-400 dark:text-gray-500">
+                      <button
+                        onClick={() => isAuthenticated && voteAnswerMutation.mutate({ answerId: answer.id, value: answer.userVote === 1 ? 0 : 1 })}
+                        disabled={!isAuthenticated || voteAnswerMutation.isPending}
+                        className={`inline-flex items-center gap-1 text-sm transition-colors ${
+                          isAuthenticated ? 'cursor-pointer' : 'cursor-default'
+                        } ${answer.userVote === 1 ? 'text-primary-500' : 'text-gray-400 dark:text-gray-500 hover:text-primary-500'}`}
+                      >
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                           <path d="M1 8.25a1.25 1.25 0 112.5 0v7.5a1.25 1.25 0 11-2.5 0v-7.5zM11 3V1.7c0-.268.14-.526.395-.607A2 2 0 0114 3c0 .995-.182 1.948-.514 2.826-.204.54.166 1.174.744 1.174h2.52c1.243 0 2.261 1.01 2.146 2.247a23.864 23.864 0 01-1.341 5.974C17.153 16.323 16.072 17 14.9 17h-3.192a3 3 0 01-1.341-.317l-2.734-1.366A3 3 0 006.292 15H5V8h.963c.685 0 1.258-.483 1.612-1.068a4.011 4.011 0 012.166-1.73c.432-.143.853-.386 1.011-.814.16-.432.248-.9.248-1.388z" />
                         </svg>
-                        {answer.voteCount}
-                      </div>
+                        <span>{answer.voteCount}</span>
+                      </button>
                     </div>
                   </div>
                   {editingAnswer === answer.id ? (

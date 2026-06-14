@@ -18,10 +18,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  questions    Question[]
-  answers      Answer[]
-  chatMessages ChatMessage[]
-  votes        Vote[]
+  questions     Question[]
+  answers       Answer[]
+  chatMessages  ChatMessage[]
+  votes         Vote[]
+  questionVotes QuestionVote[]
 
   @@map("users")
 }
@@ -38,6 +39,7 @@ model Question {
   author  User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
   answers Answer[]
   tags    QuestionTag[]
+  votes   QuestionVote[]
 
   @@map("questions")
 }
@@ -97,6 +99,19 @@ model Vote {
 
   @@unique([answerId, userId])
   @@map("votes")
+}
+
+model QuestionVote {
+  id         String   @id @default(uuid())
+  questionId String
+  userId     String
+  createdAt  DateTime @default(now())
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, userId])
+  @@map("question_votes")
 }
 
 model Tag {

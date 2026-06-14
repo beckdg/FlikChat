@@ -35,6 +35,8 @@ export interface Question {
   updatedAt: string;
   author: { id: string; username: string; avatarUrl: string | null };
   answerCount?: number;
+  likeCount?: number;
+  likedByUser?: boolean;
   tags?: Tag[];
 }
 
@@ -57,6 +59,7 @@ export interface Answer {
   updatedAt: string;
   author: { id: string; username: string; avatarUrl: string | null };
   voteCount: number;
+  userVote: number;
   roomId: string | null;
 }
 

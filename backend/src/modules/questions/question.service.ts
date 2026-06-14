@@ -5,14 +5,15 @@ import type { CreateQuestionDto, UpdateQuestionDto } from './question.validator'
 const questionInclude = {
   author: { select: { id: true, username: true, avatarUrl: true } },
   tags: { include: { tag: true } },
-  _count: { select: { answers: true } },
+  _count: { select: { answers: true, votes: true } },
 };
 
-function formatQuestion(q: { _count: { answers: number }; tags: { tag: { id: string; name: string } }[] } & Record<string, unknown>) {
-  const { _count, tags, ...rest } = q as any;
+function formatQuestion(q: any) {
+  const { _count, tags, ...rest } = q;
   return {
     ...rest,
     answerCount: _count.answers,
+    likeCount: _count.votes,
     tags: tags.map((t: { tag: { id: string; name: string } }) => t.tag),
   };
 }
@@ -34,6 +35,7 @@ export class QuestionService {
     page = 1,
     limit = 20,
     filters?: { search?: string; type?: string; sortBy?: string; sortOrder?: string },
+    _userId?: string,
   ) {
     const skip = (page - 1) * limit;
     const { search, type, sortBy = 'newest', sortOrder = 'desc' } = filters ?? {};
@@ -77,7 +79,7 @@ export class QuestionService {
     };
   }
 
-  async getTrending(limit = 5) {
+  async getTrending(limit = 5, _userId?: string) {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
     const items = await prisma.question.findMany({
@@ -92,7 +94,7 @@ export class QuestionService {
       .sort((a, b) => b.answerCount - a.answerCount);
   }
 
-  async getById(id: string) {
+  async getById(id: string, userId?: string) {
     const question = await prisma.question.findUnique({
       where: { id },
       include: questionInclude,
@@ -100,7 +102,16 @@ export class QuestionService {
 
     if (!question) throw new AppError(404, 'Question not found');
 
-    return formatQuestion(question as any);
+    const formatted = formatQuestion(question) as any;
+
+    if (userId) {
+      const vote = await prisma.questionVote.findUnique({
+        where: { questionId_userId: { questionId: id, userId } },
+      });
+      formatted.likedByUser = !!vote;
+    }
+
+    return formatted;
   }
 
   async create(authorId: string, data: CreateQuestionDto) {
@@ -156,6 +167,25 @@ export class QuestionService {
     if (existing.authorId !== authorId) throw new AppError(403, 'Not authorized');
 
     await prisma.question.delete({ where: { id } });
+  }
+
+  async toggleLike(questionId: string, userId: string) {
+    const question = await prisma.question.findUnique({ where: { id: questionId } });
+    if (!question) throw new AppError(404, 'Question not found');
+
+    const existing = await prisma.questionVote.findUnique({
+      where: { questionId_userId: { questionId, userId } },
+    });
+
+    if (existing) {
+      await prisma.questionVote.delete({ where: { id: existing.id } });
+      const count = await prisma.questionVote.count({ where: { questionId } });
+      return { liked: false, likeCount: count };
+    }
+
+    await prisma.questionVote.create({ data: { questionId, userId } });
+    const count = await prisma.questionVote.count({ where: { questionId } });
+    return { liked: true, likeCount: count };
   }
 }
 

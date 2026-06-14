@@ -5,7 +5,8 @@ import type { AuthenticatedRequest } from '../../middleware/auth.middleware';
 
 export const getAnswersByQuestion = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await answerService.getByQuestionId(req.params.questionId as string);
+    const userId = req.query.userId as string | undefined;
+    const result = await answerService.getByQuestionId(req.params.questionId as string, userId);
     sendSuccess(res, result);
   } catch (error) {
     next(error);

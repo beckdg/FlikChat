@@ -6,6 +6,7 @@ import {
   createQuestion,
   updateQuestion,
   deleteQuestion,
+  likeQuestion,
 } from './question.controller';
 import { createQuestionSchema, updateQuestionSchema } from './question.validator';
 import { validate } from '../../middleware/validate';
@@ -19,5 +20,6 @@ router.get('/:id', getQuestionById);
 router.post('/', authenticate, validate(createQuestionSchema), createQuestion);
 router.patch('/:id', authenticate, validate(updateQuestionSchema), updateQuestion);
 router.delete('/:id', authenticate, deleteQuestion);
+router.post('/:id/like', authenticate, likeQuestion);
 
 export default router;
