@@ -131,7 +131,7 @@ export const ProfilePage = () => {
           <div className="flex items-end justify-between">
             <div className="relative -mt-14">
               <div className="relative">
-                <UserAvatar src={profile.avatarUrl} username={profile.username} size="lg" className="ring-4 ring-white dark:ring-gray-900 shadow-lg shadow-primary-500/20" />
+                <UserAvatar src={profile.avatarUrl} username={profile.username} size="xl" className="ring-4 ring-white dark:ring-gray-900" />
                 {isOwnProfile && (
                   <label className="absolute -right-1 bottom-0 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-primary-500 text-white shadow-md transition-transform hover:scale-110">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">

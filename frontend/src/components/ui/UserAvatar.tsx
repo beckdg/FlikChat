@@ -5,7 +5,7 @@ function cn(...classes: (string | boolean | undefined | null)[]) {
 interface UserAvatarProps {
   src?: string | null;
   username: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
 }
 
@@ -13,6 +13,7 @@ const sizeMap = {
   sm: 'h-6 w-6 text-[10px] rounded-md',
   md: 'h-8 w-8 text-sm rounded-xl',
   lg: 'h-10 w-10 text-base rounded-xl',
+  xl: 'h-24 w-24 text-4xl rounded-2xl',
 };
 
 export const UserAvatar = ({ src, username, size = 'md', className }: UserAvatarProps) => {
