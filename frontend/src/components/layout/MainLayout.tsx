@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { useTheme } from '@/context/ThemeContext';
@@ -8,70 +8,50 @@ interface MainLayoutProps {
   children: ReactNode;
 }
 
-import type { ReactNode } from 'react';
-
-const navItems = [
-  { to: '/', label: 'Home' },
-  { to: '/questions', label: 'Questions' },
+const bottomItems = [
+  {
+    to: '/',
+    label: 'Home',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+        <path d="M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 001.061 1.06l8.69-8.69z" />
+        <path d="M12 5.432l8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75V21a.75.75 0 01-.75.75H5.625a1.875 1.875 0 01-1.875-1.875v-6.198a2.29 2.29 0 00.091-.086L12 5.43z" />
+      </svg>
+    ),
+  },
+  {
+    to: '/questions',
+    label: 'Questions',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+        <path d="M5.566 4.657A4.505 4.505 0 016.75 4.5h10.5c.41 0 .806.055 1.183.157A3 3 0 0015.75 3h-7.5a3 3 0 00-2.684 1.657zM2.25 12a3 3 0 013-3h13.5a3 3 0 013 3v6a3 3 0 01-3 3H5.25a3 3 0 01-3-3v-6zM5.25 7.5c-.41 0-.806.055-1.184.157A3 3 0 016.75 6h10.5a3 3 0 012.683 1.657A4.505 4.505 0 0018.75 7.5H5.25z" />
+      </svg>
+    ),
+  },
 ];
 
 export const MainLayout = ({ children }: MainLayoutProps) => {
   const { isAuthenticated, user, clearAuth } = useAuthStore();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
-  const [menuOpen, setMenuOpen] = useState(false);
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
     return location.pathname.startsWith(path);
   };
 
-  const closeMenu = () => setMenuOpen(false);
-
   return (
     <div className="flex min-h-screen flex-col bg-gray-50 text-gray-900 transition-colors duration-300 dark:bg-surface-dark dark:text-gray-100">
       <header className="sticky top-0 z-50 border-b border-gray-200/60 bg-white/70 shadow-sm shadow-black/[0.02] backdrop-blur-xl transition-colors duration-300 dark:border-gray-700/40 dark:bg-gray-900/70">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-          <Link to="/" className="group flex items-center gap-2.5 shrink-0" onClick={closeMenu}>
+          <Link to="/" className="group flex items-center gap-2.5 shrink-0">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-purple-600 text-sm font-bold text-white shadow-md shadow-primary-500/20 transition-all duration-200 group-hover:scale-110 group-hover:shadow-primary-500/30">
               F
             </div>
             <span className="text-lg font-bold gradient-text">FlikChat</span>
           </Link>
 
-          <button
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 sm:hidden"
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Toggle menu"
-          >
-            {menuOpen ? (
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
-                <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
-                <path fillRule="evenodd" d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10zm0 5.25a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75a.75.75 0 01-.75-.75z" clipRule="evenodd" />
-              </svg>
-            )}
-          </button>
-
-          <nav className="hidden sm:flex sm:items-center sm:gap-1 sm:gap-1.5">
-            {navItems.map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                className={`rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
-                  isActive(item.to)
-                    ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
-                    : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100'
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
-
-            <div className="mx-1.5 h-5 w-px bg-gray-200 dark:bg-gray-700" />
-
+          <div className="flex items-center gap-1">
             <button
               onClick={toggleTheme}
               className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 transition-all duration-200 hover:bg-gray-100 hover:text-yellow-500 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-yellow-400"
@@ -89,31 +69,18 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
             </button>
 
             {isAuthenticated ? (
-              <div className="flex items-center gap-1.5">
-                <Link
-                  to="/profile"
-                  className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
-                    isActive('/profile')
-                      ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
-                      : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100'
-                  }`}
-                >
-                  <UserAvatar src={user?.avatarUrl} username={user?.username ?? 'U'} size="sm" />
-                  <span className="hidden sm:inline">{user?.username ?? 'Profile'}</span>
-                </Link>
-                <button
-                  onClick={clearAuth}
-                  className="btn-ghost rounded-lg px-3 py-2 text-sm !text-red-500 hover:!bg-red-50 hover:!text-red-600 dark:hover:!bg-red-900/20"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 sm:mr-1">
-                    <path fillRule="evenodd" d="M17 4.25A2.25 2.25 0 0014.75 2h-5.5A2.25 2.25 0 007 4.25v2a.75.75 0 001.5 0v-2a.75.75 0 01.75-.75h5.5a.75.75 0 01.75.75v11.5a.75.75 0 01-.75.75h-5.5a.75.75 0 01-.75-.75v-2a.75.75 0 00-1.5 0v2A2.25 2.25 0 009.25 18h5.5A2.25 2.25 0 0017 15.75V4.25z" clipRule="evenodd" />
-                    <path fillRule="evenodd" d="M1 10a.75.75 0 01.75-.75h9.546l-1.048-.943a.75.75 0 111.004-1.114l2.5 2.25a.75.75 0 010 1.114l-2.5 2.25a.75.75 0 11-1.004-1.114l1.048-.943H1.75A.75.75 0 011 10z" clipRule="evenodd" />
-                  </svg>
-                  <span className="hidden sm:inline">Logout</span>
-                </button>
-              </div>
+              <button
+                onClick={clearAuth}
+                className="hidden sm:flex btn-ghost rounded-lg px-3 py-2 text-sm !text-red-500 hover:!bg-red-50 hover:!text-red-600 dark:hover:!bg-red-900/20"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 sm:mr-1">
+                  <path fillRule="evenodd" d="M17 4.25A2.25 2.25 0 0014.75 2h-5.5A2.25 2.25 0 007 4.25v2a.75.75 0 001.5 0v-2a.75.75 0 01.75-.75h5.5a.75.75 0 01.75.75v11.5a.75.75 0 01-.75.75h-5.5a.75.75 0 01-.75-.75v-2a.75.75 0 00-1.5 0v2A2.25 2.25 0 009.25 18h5.5A2.25 2.25 0 0017 15.75V4.25z" clipRule="evenodd" />
+                  <path fillRule="evenodd" d="M1 10a.75.75 0 01.75-.75h9.546l-1.048-.943a.75.75 0 111.004-1.114l2.5 2.25a.75.75 0 010 1.114l-2.5 2.25a.75.75 0 11-1.004-1.114l1.048-.943H1.75A.75.75 0 011 10z" clipRule="evenodd" />
+                </svg>
+                <span>Logout</span>
+              </button>
             ) : (
-              <div className="flex items-center gap-1.5">
+              <div className="hidden sm:flex items-center gap-1.5">
                 <Link to="/login" className="btn-ghost rounded-lg px-3 py-2 text-sm">
                   Login
                 </Link>
@@ -125,94 +92,73 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
                 </Link>
               </div>
             )}
-          </nav>
-        </div>
-
-        {menuOpen && (
-          <div className="border-t border-gray-200/60 bg-white/95 px-4 py-4 space-y-3 backdrop-blur-xl dark:border-gray-700/40 dark:bg-gray-900/95 sm:hidden animate-slide-down">
-            {navItems.map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                onClick={closeMenu}
-                className={`flex rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
-                  isActive(item.to)
-                    ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
-                    : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
-            <hr className="border-gray-200 dark:border-gray-700" />
-            <button
-              onClick={toggleTheme}
-              className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-            >
-              {theme === 'light' ? (
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-yellow-500">
-                  <path fillRule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clipRule="evenodd" />
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-yellow-400">
-                  <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z" />
-                </svg>
-              )}
-              {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
-            </button>
-            <hr className="border-gray-200 dark:border-gray-700" />
-            {isAuthenticated ? (
-              <>
-                <Link
-                  to="/profile"
-                  onClick={closeMenu}
-                  className={`flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
-                    isActive('/profile')
-                      ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
-                      : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
-                  }`}
-                >
-                  <UserAvatar src={user?.avatarUrl} username={user?.username ?? 'U'} size="sm" />
-                  Profile
-                </Link>
-                <button
-                  onClick={() => { clearAuth(); closeMenu(); }}
-                  className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
-                    <path fillRule="evenodd" d="M17 4.25A2.25 2.25 0 0014.75 2h-5.5A2.25 2.25 0 007 4.25v2a.75.75 0 001.5 0v-2a.75.75 0 01.75-.75h5.5a.75.75 0 01.75.75v11.5a.75.75 0 01-.75.75h-5.5a.75.75 0 01-.75-.75v-2a.75.75 0 00-1.5 0v2A2.25 2.25 0 009.25 18h5.5A2.25 2.25 0 0017 15.75V4.25z" clipRule="evenodd" />
-                    <path fillRule="evenodd" d="M1 10a.75.75 0 01.75-.75h9.546l-1.048-.943a.75.75 0 111.004-1.114l2.5 2.25a.75.75 0 010 1.114l-2.5 2.25a.75.75 0 11-1.004-1.114l1.048-.943H1.75A.75.75 0 011 10z" clipRule="evenodd" />
-                  </svg>
-                  Logout
-                </button>
-              </>
-            ) : (
-              <div className="flex flex-col gap-2">
-                <Link
-                  to="/login"
-                  onClick={closeMenu}
-                  className="flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/register"
-                  onClick={closeMenu}
-                  className="flex items-center justify-center rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:bg-primary-700 active:scale-[0.97]"
-                >
-                  Register
-                </Link>
-              </div>
-            )}
           </div>
-        )}
+        </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 animate-fade-in">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 pb-20 sm:px-6 sm:py-8 sm:pb-8 lg:px-8 animate-fade-in">
         {children}
       </main>
 
-      <footer className="border-t border-gray-200/50 bg-white/30 backdrop-blur-xl transition-colors duration-300 dark:border-gray-700/30 dark:bg-gray-900/30">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200/60 bg-white/90 shadow-lg shadow-black/5 backdrop-blur-xl dark:border-gray-700/40 dark:bg-gray-900/90 sm:hidden">
+        <div className="flex items-center justify-around px-2 py-1">
+          {bottomItems.map((item) => {
+            const active = isActive(item.to);
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={`flex flex-col items-center gap-0.5 rounded-xl px-4 py-2 text-[10px] font-medium transition-all duration-200 ${
+                  active
+                    ? 'text-primary-600 dark:text-primary-400'
+                    : 'text-gray-400 dark:text-gray-500'
+                }`}
+              >
+                <div className={`transition-all duration-200 ${active ? 'scale-110' : ''}`}>
+                  {item.icon}
+                </div>
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+          <Link
+            to={isAuthenticated ? '/profile' : '/login'}
+            className={`flex flex-col items-center gap-0.5 rounded-xl px-4 py-2 text-[10px] font-medium transition-all duration-200 ${
+              location.pathname.startsWith('/profile') || location.pathname.startsWith('/login')
+                ? 'text-primary-600 dark:text-primary-400'
+                : 'text-gray-400 dark:text-gray-500'
+            }`}
+          >
+            <div className={`transition-all duration-200 ${location.pathname.startsWith('/profile') || location.pathname.startsWith('/login') ? 'scale-110' : ''}`}>
+              {isAuthenticated ? (
+                <UserAvatar src={user?.avatarUrl} username={user?.username ?? 'U'} size="sm" className="rounded-full" />
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+                  <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />
+                </svg>
+              )}
+            </div>
+            <span>{isAuthenticated ? 'Profile' : 'Login'}</span>
+          </Link>
+        </div>
+      </nav>
+
+      {isAuthenticated && (
+        <div className="fixed bottom-16 right-4 z-50 sm:hidden">
+          <button
+            onClick={clearAuth}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500 text-white shadow-lg shadow-red-500/30 transition-all duration-200 hover:bg-red-600 active:scale-95"
+            aria-label="Logout"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+              <path fillRule="evenodd" d="M17 4.25A2.25 2.25 0 0014.75 2h-5.5A2.25 2.25 0 007 4.25v2a.75.75 0 001.5 0v-2a.75.75 0 01.75-.75h5.5a.75.75 0 01.75.75v11.5a.75.75 0 01-.75.75h-5.5a.75.75 0 01-.75-.75v-2a.75.75 0 00-1.5 0v2A2.25 2.25 0 009.25 18h5.5A2.25 2.25 0 0017 15.75V4.25z" clipRule="evenodd" />
+              <path fillRule="evenodd" d="M1 10a.75.75 0 01.75-.75h9.546l-1.048-.943a.75.75 0 111.004-1.114l2.5 2.25a.75.75 0 010 1.114l-2.5 2.25a.75.75 0 11-1.004-1.114l1.048-.943H1.75A.75.75 0 011 10z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      <footer className="hidden sm:block border-t border-gray-200/50 bg-white/30 backdrop-blur-xl transition-colors duration-300 dark:border-gray-700/30 dark:bg-gray-900/30">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
           <div className="grid gap-8 sm:grid-cols-3">
             <div>
@@ -231,7 +177,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
               <ul className="mt-3 space-y-2">
                 {['Questions', 'Discussions', 'Community'].map((item) => (
                   <li key={item}>
-                    <Link to="/" onClick={closeMenu} className="text-sm text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
+                    <Link to="/" className="text-sm text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
                       {item}
                     </Link>
                   </li>
