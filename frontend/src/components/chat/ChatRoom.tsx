@@ -20,6 +20,7 @@ export const ChatRoom = ({ roomId }: ChatRoomProps) => {
   const [sending, setSending] = useState(false);
   const [editingMsgId, setEditingMsgId] = useState<string | null>(null);
   const [editMsgContent, setEditMsgContent] = useState('');
+  const [revealedMsgId, setRevealedMsgId] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   const { data, isLoading } = useQuery({
@@ -131,6 +132,7 @@ export const ChatRoom = ({ roomId }: ChatRoomProps) => {
         ) : (
           messages.map((msg) => {
             const isOwn = msg.author.id === user?.id;
+            const isRevealed = revealedMsgId === msg.id;
             return (
               <div key={msg.id} className={`flex items-end gap-2 ${isOwn ? 'justify-end' : 'justify-start'}`}>
                 {!isOwn && (
@@ -138,13 +140,18 @@ export const ChatRoom = ({ roomId }: ChatRoomProps) => {
                     <UserAvatar src={msg.author.avatarUrl} username={msg.author.username} size="sm" className="rounded-full mb-0.5" />
                   </Link>
                 )}
-                <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
+                <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} max-w-full sm:max-w-[75%]`}>
                   <div
-                    className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${
+                    className={`w-full rounded-2xl px-4 py-2.5 text-sm cursor-pointer ${
                       isOwn
                         ? 'bg-primary-500 text-white rounded-br-md'
                         : 'bg-white text-gray-700 shadow-sm rounded-bl-md dark:bg-gray-800 dark:text-gray-200'
                     }`}
+                    onClick={() => {
+                      if (isOwn && !editingMsgId) {
+                        setRevealedMsgId(isRevealed ? null : msg.id);
+                      }
+                    }}
                   >
                     {!isOwn && (
                       <Link to={`/profile/${msg.author.username}`} className="mb-0.5 text-[11px] font-semibold text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors">
@@ -157,23 +164,29 @@ export const ChatRoom = ({ roomId }: ChatRoomProps) => {
                           className="input-field !py-1.5 !text-sm"
                           value={editMsgContent}
                           onChange={(e) => setEditMsgContent(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
                         />
                         <div className="flex gap-1.5">
                           <button
-                            onClick={async () => {
+                            onClick={async (e) => {
+                              e.stopPropagation();
                               if (!editMsgContent.trim()) return;
                               try {
                                 const res = await updateMessage(msg.id, { content: editMsgContent.trim() });
                                 if (res.data) handleMessageUpdated(res.data);
                               } catch {}
                               setEditingMsgId(null);
+                              setRevealedMsgId(null);
                             }}
                             className="text-[10px] font-semibold text-white/80 hover:text-white"
                           >
                             Save
                           </button>
                           <button
-                            onClick={() => setEditingMsgId(null)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingMsgId(null);
+                            }}
                             className="text-[10px] font-semibold text-white/60 hover:text-white"
                           >
                             Cancel
@@ -183,34 +196,38 @@ export const ChatRoom = ({ roomId }: ChatRoomProps) => {
                     ) : (
                       <p className="whitespace-pre-wrap break-words">{msg.content}</p>
                     )}
-                    <p className={`mt-0.5 text-[10px] ${isOwn ? 'text-white/60' : 'text-gray-400'}`}>
+                    <p className={`mt-0.5 text-[10px] whitespace-nowrap ${isOwn ? 'text-white/60' : 'text-gray-400'}`}>
                       {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
-                  {isOwn && !editingMsgId && (
-                    <div className="flex items-center gap-0.5 mt-0.5">
+                  {isOwn && isRevealed && !editingMsgId && (
+                    <div className="flex items-center gap-1 mt-1 animate-fade-in">
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setEditMsgContent(msg.content);
                           setEditingMsgId(msg.id);
+                          setRevealedMsgId(null);
                         }}
-                        className="flex h-5 w-5 items-center justify-center rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-gray-100 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
                           <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" />
                           <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" />
                         </svg>
                       </button>
                       <button
-                        onClick={async () => {
+                        onClick={async (e) => {
+                          e.stopPropagation();
                           try {
                             await deleteMessage(msg.id);
                             handleMessageDeleted({ id: msg.id });
                           } catch {}
+                          setRevealedMsgId(null);
                         }}
-                        className="flex h-5 w-5 items-center justify-center rounded text-gray-400 hover:text-red-500 transition-colors"
+                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-gray-100 text-gray-500 transition-colors hover:bg-red-100 hover:text-red-500 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
                           <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c-.84 0-1.673.025-2.5.075V3.75c0-.69.56-1.25 1.25-1.25h2.5c.69 0 1.25.56 1.25 1.25v.325C11.673 4.025 10.84 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd" />
                         </svg>
                       </button>
