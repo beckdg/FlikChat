@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { getProfile, getProfileByUsername, updateProfile, uploadAvatar, uploadCover } from './user.controller';
+import { getProfile, getProfileByUsername, deleteAccount, updateProfile, uploadAvatar, uploadCover } from './user.controller';
 import { updateUserSchema } from './user.validator';
 import { validate } from '../../middleware/validate';
 import { authenticate } from '../../middleware/auth.middleware';
@@ -20,6 +20,7 @@ const upload = multer({
 
 router.get('/profile', authenticate, getProfile);
 router.patch('/profile', authenticate, validate(updateUserSchema), updateProfile);
+router.delete('/profile', authenticate, deleteAccount);
 router.post('/profile/avatar', authenticate, upload.single('image'), uploadAvatar);
 router.post('/profile/cover', authenticate, upload.single('image'), uploadCover);
 router.get('/:username', getProfileByUsername);

@@ -1,8 +1,9 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { useTheme } from '@/context/ThemeContext';
 import { UserAvatar } from '@/components/ui/UserAvatar';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -34,6 +35,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
   const { isAuthenticated, user, clearAuth } = useAuthStore();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
@@ -95,7 +97,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
                 <UserAvatar src={user?.avatarUrl} username={user?.username ?? 'U'} size="sm" className="rounded-full" />
               </Link>
               <button
-                onClick={clearAuth}
+                onClick={() => setShowLogoutModal(true)}
                 className="hidden sm:flex btn-ghost rounded-lg px-3 py-2 text-sm !text-red-500 hover:!bg-red-50 hover:!text-red-600 dark:hover:!bg-red-900/20"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 sm:mr-1">
@@ -172,7 +174,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
       {isAuthenticated && (
         <div className="fixed bottom-16 right-4 z-50 sm:hidden">
           <button
-            onClick={clearAuth}
+            onClick={() => setShowLogoutModal(true)}
             className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500 text-white shadow-lg shadow-red-500/30 transition-all duration-200 hover:bg-red-600 active:scale-95"
             aria-label="Logout"
           >
@@ -228,6 +230,18 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
           </div>
         </div>
       </footer>
+
+      <ConfirmModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={() => {
+          clearAuth();
+          setShowLogoutModal(false);
+        }}
+        title="Logout"
+        message="Are you sure you want to log out?"
+        confirmLabel="Logout"
+      />
     </div>
   );
 };

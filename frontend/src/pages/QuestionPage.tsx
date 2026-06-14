@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/Button';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { ChatRoom } from '@/components/chat/ChatRoom';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 export const QuestionPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +20,8 @@ export const QuestionPage = () => {
   const [editQuestionContent, setEditQuestionContent] = useState('');
   const [editingAnswer, setEditingAnswer] = useState<string | null>(null);
   const [editAnswerContent, setEditAnswerContent] = useState('');
+  const [showDeleteQuestionModal, setShowDeleteQuestionModal] = useState(false);
+  const [showDeleteAnswerModal, setShowDeleteAnswerModal] = useState<string | null>(null);
   const userId = user?.id;
 
   const { data: qData, isLoading: qLoading } = useQuery({
@@ -164,11 +167,7 @@ export const QuestionPage = () => {
               </svg>
             </button>
             <button
-              onClick={() => {
-                if (window.confirm('Delete this question?')) {
-                  deleteQuestionMutation.mutate();
-                }
-              }}
+              onClick={() => setShowDeleteQuestionModal(true)}
               className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
@@ -290,11 +289,7 @@ export const QuestionPage = () => {
                             </svg>
                           </button>
                           <button
-                            onClick={() => {
-                              if (window.confirm('Delete this answer?')) {
-                                deleteAnswerMutation.mutate(answer.id);
-                              }
-                            }}
+                            onClick={() => setShowDeleteAnswerModal(answer.id)}
                             className="flex h-7 w-7 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
@@ -385,6 +380,34 @@ export const QuestionPage = () => {
           </p>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={showDeleteQuestionModal}
+        onClose={() => setShowDeleteQuestionModal(false)}
+        onConfirm={() => {
+          deleteQuestionMutation.mutate();
+          setShowDeleteQuestionModal(false);
+        }}
+        title="Delete Question"
+        message="Are you sure you want to delete this question?"
+        warning="This will permanently delete the question, all its answers, and all discussion rooms and chat messages associated with those answers. This action cannot be undone."
+        confirmLabel="Delete Question"
+      />
+
+      <ConfirmModal
+        isOpen={!!showDeleteAnswerModal}
+        onClose={() => setShowDeleteAnswerModal(null)}
+        onConfirm={() => {
+          if (showDeleteAnswerModal) {
+            deleteAnswerMutation.mutate(showDeleteAnswerModal);
+            setShowDeleteAnswerModal(null);
+          }
+        }}
+        title="Delete Answer"
+        message="Are you sure you want to delete this answer?"
+        warning="This will permanently delete the answer and its associated discussion room and all chat messages. This action cannot be undone."
+        confirmLabel="Delete Answer"
+      />
     </div>
   );
 };

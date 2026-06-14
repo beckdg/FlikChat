@@ -24,6 +24,16 @@ export const getProfileByUsername = async (req: Request, res: Response, next: Ne
   }
 };
 
+export const deleteAccount = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId } = (req as AuthenticatedRequest).user!;
+    await userService.deleteAccount(userId);
+    sendSuccess(res, undefined, 'Account deleted');
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { userId } = (req as AuthenticatedRequest).user!;

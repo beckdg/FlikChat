@@ -18,6 +18,9 @@ export const uploadAvatar = (file: File) => {
   }).then((r) => r.data);
 };
 
+export const deleteAccount = () =>
+  api.delete<ApiResponse<void>>('/users/profile').then((r) => r.data);
+
 export const uploadCover = (file: File) => {
   const form = new FormData();
   form.append('image', file);

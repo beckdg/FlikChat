@@ -2,18 +2,20 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
-import { getMyProfile, getProfileByUsername, updateProfile, uploadAvatar, uploadCover } from '@/services/users';
+import { getMyProfile, getProfileByUsername, updateProfile, uploadAvatar, uploadCover, deleteAccount } from '@/services/users';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { Button } from '@/components/ui/Button';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 export const ProfilePage = () => {
   const { username: paramUsername } = useParams<{ username: string }>();
-  const { user: authUser, isAuthenticated } = useAuthStore();
+  const { user: authUser, isAuthenticated, clearAuth } = useAuthStore();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [editUsername, setEditUsername] = useState('');
   const [editBio, setEditBio] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const avatarRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
 
@@ -54,6 +56,14 @@ export const ProfilePage = () => {
   const coverMutation = useMutation({
     mutationFn: uploadCover,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-profile'] }),
+  });
+
+  const deleteAccountMutation = useMutation({
+    mutationFn: deleteAccount,
+    onSuccess: () => {
+      clearAuth();
+      navigate('/');
+    },
   });
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -237,6 +247,31 @@ export const ProfilePage = () => {
           ))}
         </dl>
       </div>
+
+      {isOwnProfile && (
+        <div className="border-t border-gray-200/60 pt-6 dark:border-gray-700/30">
+          <button
+            onClick={() => setShowDeleteModal(true)}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-red-200 px-4 py-3 text-sm font-semibold text-red-600 transition-all hover:bg-red-50 dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-900/20"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+              <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c-.84 0-1.673.025-2.5.075V3.75c0-.69.56-1.25 1.25-1.25h2.5c.69 0 1.25.56 1.25 1.25v.325C11.673 4.025 10.84 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd" />
+            </svg>
+            Delete Account
+          </button>
+        </div>
+      )}
+
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={() => deleteAccountMutation.mutate()}
+        title="Delete Account"
+        message="This will permanently delete your account and all associated data. This action cannot be undone."
+        warning="All your questions, answers, chat rooms, messages, votes, and profile data will be permanently deleted. You will lose access to all content immediately."
+        confirmLabel={deleteAccountMutation.isPending ? 'Deleting...' : 'Delete Account'}
+        isLoading={deleteAccountMutation.isPending}
+      />
     </div>
   );
 };
