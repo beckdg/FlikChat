@@ -3,45 +3,85 @@ import { io, Socket } from 'socket.io-client';
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ?? 'http://localhost:3001';
 
 let socket: Socket | null = null;
+let connectPromise: Promise<Socket> | null = null;
 
 const getToken = () => localStorage.getItem('accessToken');
 
+const createSocket = (): Socket => {
+  const s = io(SOCKET_URL, {
+    autoConnect: false,
+    withCredentials: true,
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+  });
+  return s;
+};
+
 export const getSocket = (): Socket => {
   if (!socket) {
-    socket = io(SOCKET_URL, {
-      autoConnect: false,
-      withCredentials: true,
-      auth: { token: getToken() },
-    });
+    socket = createSocket();
   }
   return socket;
 };
 
-export const connectSocket = (): Socket => {
+export const connectSocket = (): Promise<Socket> => {
   const s = getSocket();
-  if (!s.connected) {
+  if (s.connected) return Promise.resolve(s);
+
+  if (connectPromise) return connectPromise;
+
+  connectPromise = new Promise((resolve) => {
     s.auth = { token: getToken() };
     s.connect();
-  }
-  return s;
+
+    const onConnect = () => {
+      s.off('connect', onConnect);
+      connectPromise = null;
+      resolve(s);
+    };
+
+    if (s.connected) {
+      connectPromise = null;
+      resolve(s);
+    } else {
+      s.on('connect', onConnect);
+    }
+  });
+
+  return connectPromise;
 };
 
 export const disconnectSocket = (): void => {
   if (socket?.connected) {
     socket.disconnect();
   }
+  socket = null;
+  connectPromise = null;
 };
 
-export const joinRoom = (roomId: string): void => {
-  getSocket().emit('join_room', { roomId });
+export const authenticated = (): void => {
+  const s = getSocket();
+  if (s.connected) {
+    s.auth = { token: getToken() };
+    s.disconnect().connect();
+  }
 };
 
-export const leaveRoom = (roomId: string): void => {
-  getSocket().emit('leave_room', { roomId });
+export const joinRoom = async (roomId: string): Promise<void> => {
+  const s = await connectSocket();
+  s.emit('join_room', { roomId });
 };
 
-export const sendSocketMessage = (roomId: string, content: string): void => {
-  getSocket().emit('send_message', { roomId, content });
+export const leaveRoom = async (roomId: string): Promise<void> => {
+  const s = await connectSocket();
+  s.emit('leave_room', { roomId });
+};
+
+export const sendSocketMessage = async (roomId: string, content: string): Promise<void> => {
+  const s = await connectSocket();
+  s.emit('send_message', { roomId, content });
 };
 
 export default getSocket;

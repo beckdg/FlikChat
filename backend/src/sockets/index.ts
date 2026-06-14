@@ -22,42 +22,49 @@ export const initializeSocket = (httpServer: HttpServer): Server => {
       methods: ['GET', 'POST'],
       credentials: true,
     },
+    pingInterval: 25000,
+    pingTimeout: 20000,
   });
 
   io.use((socket: AuthenticatedSocket, next) => {
     const token = socket.handshake.auth.token ?? socket.handshake.query.token;
     if (!token) {
-      return next(new Error('Authentication required'));
+      return next();
     }
     try {
       const decoded = jwt.verify(token as string, env.jwtSecret) as JwtPayload;
       socket.userId = decoded.userId;
       next();
     } catch {
-      next(new Error('Invalid token'));
+      next();
     }
   });
 
   io.on('connection', (socket: AuthenticatedSocket) => {
-    console.log(`[Socket] User ${socket.userId} connected: ${socket.id}`);
+    const userLabel = socket.userId ?? 'anonymous';
+    console.log(`[Socket] ${userLabel} connected: ${socket.id}`);
 
     socket.on('join_room', (payload: { roomId: string }) => {
       socket.join(payload.roomId);
-      console.log(`[Socket] ${socket.userId} joined room: ${payload.roomId}`);
+      console.log(`[Socket] ${userLabel} joined room: ${payload.roomId}`);
     });
 
     socket.on('leave_room', (payload: { roomId: string }) => {
       socket.leave(payload.roomId);
-      console.log(`[Socket] ${socket.userId} left room: ${payload.roomId}`);
+      console.log(`[Socket] ${userLabel} left room: ${payload.roomId}`);
     });
 
     socket.on('send_message', async (payload: { roomId: string; content: string }) => {
-      if (!socket.userId) return;
+      if (!socket.userId) {
+        socket.emit('error', { message: 'Authentication required to send messages' });
+        return;
+      }
+      if (!payload.content?.trim() || !payload.roomId) return;
 
       try {
         const message = await prisma.chatMessage.create({
           data: {
-            content: payload.content,
+            content: payload.content.trim(),
             roomId: payload.roomId,
             authorId: socket.userId,
           },
@@ -74,7 +81,7 @@ export const initializeSocket = (httpServer: HttpServer): Server => {
     });
 
     socket.on('disconnect', () => {
-      console.log(`[Socket] User ${socket.userId} disconnected: ${socket.id}`);
+      console.log(`[Socket] ${userLabel} disconnected: ${socket.id}`);
     });
   });
 

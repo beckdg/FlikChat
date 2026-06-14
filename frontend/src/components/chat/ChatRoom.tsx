@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getMessages, sendMessage } from '@/services/discussions';
-import { getSocket, joinRoom, leaveRoom, sendSocketMessage } from '@/services/socket';
+import { joinRoom, leaveRoom } from '@/services/socket';
 import { useAuthStore } from '@/store/authStore';
+import { getSocket } from '@/services/socket';
 import type { ChatMessage } from '@/types';
 
 interface ChatRoomProps {
@@ -11,6 +12,7 @@ interface ChatRoomProps {
 
 export const ChatRoom = ({ roomId }: ChatRoomProps) => {
   const { user, isAuthenticated } = useAuthStore();
+  const queryClient = useQueryClient();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -28,21 +30,40 @@ export const ChatRoom = ({ roomId }: ChatRoomProps) => {
     }
   }, [data]);
 
+  const handleNewMessage = useCallback((msg: ChatMessage) => {
+    setMessages((prev) => {
+      if (prev.some((m) => m.id === msg.id)) return prev;
+      return [...prev, msg];
+    });
+  }, []);
+
   useEffect(() => {
     if (!roomId) return;
-    joinRoom(roomId);
 
-    const socket = getSocket();
-    const handler = (msg: ChatMessage) => {
-      setMessages((prev) => [...prev, msg]);
+    let cancelled = false;
+
+    const setup = async () => {
+      await joinRoom(roomId);
+      if (cancelled) return;
+
+      const socket = getSocket();
+      socket.on('new_message', handleNewMessage);
+
+      socket.on('connect', () => {
+        socket.emit('join_room', { roomId });
+      });
     };
-    socket.on('new_message', handler);
+
+    setup();
 
     return () => {
+      cancelled = true;
       leaveRoom(roomId);
-      socket.off('new_message', handler);
+      const socket = getSocket();
+      socket.off('new_message', handleNewMessage);
+      socket.off('connect');
     };
-  }, [roomId]);
+  }, [roomId, handleNewMessage]);
 
   useEffect(() => {
     if (listRef.current) {
@@ -54,12 +75,15 @@ export const ChatRoom = ({ roomId }: ChatRoomProps) => {
     e.preventDefault();
     if (!input.trim() || sending) return;
     setSending(true);
+
     try {
-      await sendMessage({ content: input.trim(), roomId });
+      const res = await sendMessage({ content: input.trim(), roomId });
+      if (res.data) {
+        setMessages((prev) => [...prev, res.data!]);
+      }
       setInput('');
+      queryClient.invalidateQueries({ queryKey: ['messages', roomId] });
     } catch {
-      // fallback to socket emit
-      sendSocketMessage(roomId, input.trim());
       setInput('');
     }
     setSending(false);
