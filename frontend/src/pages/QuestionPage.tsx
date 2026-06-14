@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getQuestionById } from '@/services/questions';
 import { getAnswersByQuestion, createAnswer } from '@/services/answers';
@@ -74,10 +74,10 @@ export const QuestionPage = () => {
             {question.title}
           </h1>
           <div className="mt-3 flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
-            <div className="flex items-center gap-2">
+            <Link to={`/profile/${question.author.username}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <UserAvatar src={question.author.avatarUrl} username={question.author.username} size="sm" className="rounded-full" />
               <span className="font-medium text-gray-700 dark:text-gray-300">{question.author.username}</span>
-            </div>
+            </Link>
             <span className="text-gray-300 dark:text-gray-600">·</span>
             <span>{new Date(question.createdAt).toLocaleDateString()}</span>
             <span className="text-gray-300 dark:text-gray-600">·</span>
@@ -120,7 +120,7 @@ export const QuestionPage = () => {
               <div key={answer.id} className="card overflow-hidden">
                 <div className="p-5 sm:p-6">
                   <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
+                    <Link to={`/profile/${answer.author.username}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                       <UserAvatar src={answer.author.avatarUrl} username={answer.author.username} size="sm" className="rounded-full" />
                       <div>
                         <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -130,7 +130,7 @@ export const QuestionPage = () => {
                           {new Date(answer.createdAt).toLocaleDateString()}
                         </span>
                       </div>
-                    </div>
+                    </Link>
                     <div className="flex items-center gap-1 text-sm text-gray-400 dark:text-gray-500">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                         <path d="M1 8.25a1.25 1.25 0 112.5 0v7.5a1.25 1.25 0 11-2.5 0v-7.5zM11 3V1.7c0-.268.14-.526.395-.607A2 2 0 0114 3c0 .995-.182 1.948-.514 2.826-.204.54.166 1.174.744 1.174h2.52c1.243 0 2.261 1.01 2.146 2.247a23.864 23.864 0 01-1.341 5.974C17.153 16.323 16.072 17 14.9 17h-3.192a3 3 0 01-1.341-.317l-2.734-1.366A3 3 0 006.292 15H5V8h.963c.685 0 1.258-.483 1.612-1.068a4.011 4.011 0 012.166-1.73c.432-.143.853-.386 1.011-.814.16-.432.248-.9.248-1.388z" />

@@ -135,21 +135,26 @@ export const HomePage = () => {
           </div>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {trending.map((q) => (
-              <Link
+              <div
                 key={q.id}
-                to={`/questions/${q.id}`}
                 className="card group flex items-start gap-4 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
               >
-                <UserAvatar src={q.author.avatarUrl} username={q.author.username} size="md" />
+                <Link to={`/profile/${q.author.username}`} onClick={(e) => e.stopPropagation()}>
+                  <UserAvatar src={q.author.avatarUrl} username={q.author.username} size="md" />
+                </Link>
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-primary-600 dark:group-hover:text-primary-400">
-                    {q.title}
-                  </h3>
+                  <Link to={`/questions/${q.id}`} className="after:absolute after:inset-0">
+                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-primary-600 dark:group-hover:text-primary-400">
+                      {q.title}
+                    </h3>
+                  </Link>
                   <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 line-clamp-1">
                     {q.content}
                   </p>
                   <div className="mt-2 flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
-                    <span>{q.author.username}</span>
+                    <Link to={`/profile/${q.author.username}`} className="relative z-10 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+                      {q.author.username}
+                    </Link>
                     <span className="flex items-center gap-1">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
                         <path d="M3.505 2.365A41.369 41.369 0 019 2c1.863 0 3.697.124 5.495.365 1.247.167 2.18 1.108 2.435 2.268a4.45 4.45 0 00-.577-.069 43.141 43.141 0 00-4.706 0C9.229 4.696 7.5 6.727 7.5 8.998v2.24c0 1.413.67 2.735 1.76 3.562l-2.98 2.98A.75.75 0 015 17.25v-3.443c-.501-.048-1-.106-1.495-.172C2.033 13.438 1 12.162 1 10.655V4.706c0-1.57 1.176-2.895 2.505-2.341z" />
@@ -159,7 +164,7 @@ export const HomePage = () => {
                     </span>
                   </div>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         </section>

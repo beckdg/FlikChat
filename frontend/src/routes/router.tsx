@@ -60,6 +60,14 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: '/profile/:username',
+    element: (
+      <MainLayout>
+        <ProfilePage />
+      </MainLayout>
+    ),
+  },
+  {
     path: '*',
     element: (
       <MainLayout>

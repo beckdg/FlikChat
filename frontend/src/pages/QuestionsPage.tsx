@@ -111,21 +111,26 @@ export const QuestionsPage = () => {
       ) : (
         <div className="space-y-3">
           {questions.map((q) => (
-            <Link
+            <div
               key={q.id}
-              to={`/questions/${q.id}`}
-              className="card flex items-start gap-4 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+              className="card relative flex items-start gap-4 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
             >
-              <UserAvatar src={q.author.avatarUrl} username={q.author.username} size="md" />
+              <Link to={`/profile/${q.author.username}`} onClick={(e) => e.stopPropagation()}>
+                <UserAvatar src={q.author.avatarUrl} username={q.author.username} size="md" />
+              </Link>
               <div className="min-w-0 flex-1">
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
-                  {q.title}
-                </h3>
+                <Link to={`/questions/${q.id}`} className="after:absolute after:inset-0">
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
+                    {q.title}
+                  </h3>
+                </Link>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
                   {q.content}
                 </p>
                 <div className="mt-2 flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500">
-                  <span>{q.author.username}</span>
+                  <Link to={`/profile/${q.author.username}`} className="relative z-10 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+                    {q.author.username}
+                  </Link>
                   <span>{new Date(q.createdAt).toLocaleDateString()}</span>
                   <span className="flex items-center gap-1">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
@@ -139,7 +144,7 @@ export const QuestionsPage = () => {
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="mt-1.5 h-5 w-5 shrink-0 text-gray-300 dark:text-gray-600">
                 <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
               </svg>
-            </Link>
+            </div>
           ))}
         </div>
       )}

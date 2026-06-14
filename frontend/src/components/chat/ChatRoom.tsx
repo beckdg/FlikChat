@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getMessages, sendMessage } from '@/services/discussions';
 import { joinRoom, leaveRoom } from '@/services/socket';
@@ -119,7 +120,9 @@ export const ChatRoom = ({ roomId }: ChatRoomProps) => {
             return (
               <div key={msg.id} className={`flex items-end gap-2 ${isOwn ? 'justify-end' : 'justify-start'}`}>
                 {!isOwn && (
-                  <UserAvatar src={msg.author.avatarUrl} username={msg.author.username} size="sm" className="rounded-full mb-0.5" />
+                  <Link to={`/profile/${msg.author.username}`}>
+                    <UserAvatar src={msg.author.avatarUrl} username={msg.author.username} size="sm" className="rounded-full mb-0.5" />
+                  </Link>
                 )}
                 <div
                   className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${
@@ -129,9 +132,9 @@ export const ChatRoom = ({ roomId }: ChatRoomProps) => {
                   }`}
                 >
                   {!isOwn && (
-                    <p className="mb-0.5 text-[11px] font-semibold text-primary-600 dark:text-primary-400">
+                    <Link to={`/profile/${msg.author.username}`} className="mb-0.5 text-[11px] font-semibold text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors">
                       {msg.author.username}
-                    </p>
+                    </Link>
                   )}
                   <p className="whitespace-pre-wrap break-words">{msg.content}</p>
                   <p className={`mt-0.5 text-[10px] ${isOwn ? 'text-white/60' : 'text-gray-400'}`}>
@@ -139,7 +142,9 @@ export const ChatRoom = ({ roomId }: ChatRoomProps) => {
                   </p>
                 </div>
                 {isOwn && (
-                  <UserAvatar src={msg.author.avatarUrl} username={msg.author.username} size="sm" className="rounded-full mb-0.5" />
+                  <Link to={`/profile/${msg.author.username}`}>
+                    <UserAvatar src={msg.author.avatarUrl} username={msg.author.username} size="sm" className="rounded-full mb-0.5" />
+                  </Link>
                 )}
               </div>
             );
