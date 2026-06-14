@@ -145,7 +145,7 @@ export const ChatRoom = ({ roomId, variant = 'full' }: ChatRoomProps) => {
 
       <div
         ref={listRef}
-        className={`overflow-y-auto px-4 py-3 space-y-3 ${variant === 'preview' ? 'max-h-48' : 'h-64'}`}
+        className={`overflow-y-auto px-4 py-3 space-y-3 ${variant === 'preview' ? 'max-h-48' : 'h-96'}`}
       >
         {isLoading ? (
           <div className="flex items-center justify-center py-8 text-sm text-gray-400">

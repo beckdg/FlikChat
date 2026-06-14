@@ -105,3 +105,12 @@ export const getRoomParticipants = async (req: Request, res: Response, next: Nex
     next(error);
   }
 };
+
+export const getRoomMembers = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const members = await discussionService.getRoomMembers(req.params.roomId as string);
+    sendSuccess(res, members);
+  } catch (error) {
+    next(error);
+  }
+};

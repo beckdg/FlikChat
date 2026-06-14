@@ -13,6 +13,9 @@ export const getRoomById = (roomId: string) =>
 export const getRoomParticipants = (roomId: string) =>
   api.get<ApiResponse<Array<{ userId: string; username: string; joinedAt: string }>>>(`/discussions/${roomId}/participants`).then((r) => r.data);
 
+export const getRoomMembers = (roomId: string) =>
+  api.get<ApiResponse<Array<{ userId: string; username: string; avatarUrl: string | null; active: boolean }>>>(`/discussions/${roomId}/members`).then((r) => r.data);
+
 export const getMessages = (roomId: string, page = 1, limit = 50) =>
   api.get<ApiResponse<PaginatedResponse<ChatMessage>>>(`/discussions/${roomId}/messages`, {
     params: { page, limit },

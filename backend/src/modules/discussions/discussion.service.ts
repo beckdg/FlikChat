@@ -1,6 +1,7 @@
 import { prisma } from '../../config/database';
 import { AppError } from '../../utils/errors';
 import { notificationService } from '../notifications/notification.service';
+import { getRoomParticipants } from '../../sockets';
 import type { SendMessageDto } from './discussion.validator';
 
 export class DiscussionService {
@@ -199,6 +200,30 @@ export class DiscussionService {
       totalMessages: room._count.messages,
       newMessages: countMap.get(room.id) ?? 0,
       lastActivity: room.messages[0]?.createdAt ?? null,
+    }));
+  }
+
+  async getRoomMembers(roomId: string) {
+    const room = await prisma.chatRoom.findUnique({ where: { id: roomId } });
+    if (!room) throw new AppError(404, 'Chat room not found');
+
+    const memberRecords = await prisma.chatMessage.findMany({
+      where: { roomId },
+      distinct: ['authorId'],
+      select: {
+        authorId: true,
+        author: { select: { id: true, username: true, avatarUrl: true } },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const activeUserIds = new Set(getRoomParticipants(roomId).map((p) => p.userId));
+
+    return memberRecords.map((record) => ({
+      userId: record.author.id,
+      username: record.author.username,
+      avatarUrl: record.author.avatarUrl,
+      active: activeUserIds.has(record.author.id),
     }));
   }
 }
