@@ -7,7 +7,11 @@ export const getQuestions = async (req: Request, res: Response, next: NextFuncti
   try {
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 20));
-    const result = await questionService.getAll(page, limit);
+    const search = (req.query.search as string) || undefined;
+    const type = (req.query.type as string) || undefined;
+    const sortBy = (req.query.sortBy as string) || 'newest';
+    const sortOrder = (req.query.sortOrder as string) || 'desc';
+    const result = await questionService.getAll(page, limit, { search, type, sortBy, sortOrder });
     sendSuccess(res, result);
   } catch (error) {
     next(error);

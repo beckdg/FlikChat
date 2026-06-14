@@ -1,8 +1,15 @@
 import { api } from './api';
 import type { ApiResponse, Question, PaginatedResponse, QuestionType } from '@/types';
 
-export const getQuestions = (page = 1, limit = 20) =>
-  api.get<ApiResponse<PaginatedResponse<Question>>>('/questions', { params: { page, limit } }).then((r) => r.data);
+export interface QuestionFilters {
+  search?: string;
+  type?: string;
+  sortBy?: 'newest' | 'answers';
+  sortOrder?: 'asc' | 'desc';
+}
+
+export const getQuestions = (page = 1, limit = 20, filters?: QuestionFilters) =>
+  api.get<ApiResponse<PaginatedResponse<Question>>>('/questions', { params: { page, limit, ...filters } }).then((r) => r.data);
 
 export const getTrendingQuestions = () =>
   api.get<ApiResponse<Question[]>>('/questions/trending').then((r) => r.data);

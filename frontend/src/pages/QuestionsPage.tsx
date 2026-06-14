@@ -1,11 +1,17 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getQuestions, createQuestion } from '@/services/questions';
+import { getQuestions, createQuestion, type QuestionFilters } from '@/services/questions';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/Button';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { AskQuestion } from '@/components/ui/AskQuestion';
+import { QUESTION_TYPES } from '@/types';
+
+const sortOptions = [
+  { value: 'newest', label: 'Newest' },
+  { value: 'answers', label: 'Most Answers' },
+] as const;
 
 export const QuestionsPage = () => {
   const { isAuthenticated } = useAuthStore();
@@ -13,9 +19,20 @@ export const QuestionsPage = () => {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
 
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
+  const [sortBy, setSortBy] = useState<string>('newest');
+
+  const filters: QuestionFilters = {
+    ...(debouncedSearch && { search: debouncedSearch }),
+    ...(typeFilter && { type: typeFilter }),
+    sortBy: sortBy as 'newest' | 'answers',
+  };
+
   const { data, isLoading } = useQuery({
-    queryKey: ['questions'],
-    queryFn: () => getQuestions(1, 50),
+    queryKey: ['questions', filters],
+    queryFn: () => getQuestions(1, 50, filters),
   });
 
   const { mutate, isPending } = useMutation({
@@ -28,8 +45,13 @@ export const QuestionsPage = () => {
 
   const questions = data?.data?.items ?? [];
 
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setTimeout(() => setDebouncedSearch(value), 300);
+  };
+
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       <button
         onClick={() => navigate(-1)}
         className="flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors"
@@ -39,7 +61,8 @@ export const QuestionsPage = () => {
         </svg>
         Back
       </button>
-      <div className="flex items-center justify-between">
+
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Questions</h1>
           <p className="mt-1 text-gray-500 dark:text-gray-400">
@@ -61,6 +84,62 @@ export const QuestionsPage = () => {
         />
       )}
 
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-gray-500">
+            <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
+          </svg>
+          <input
+            className="input-field pl-9"
+            placeholder="Search by title, content, or tags..."
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 mr-1">Type:</span>
+        <button
+          onClick={() => setTypeFilter('')}
+          className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+            !typeFilter
+              ? 'bg-primary-600 text-white shadow-sm'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
+          }`}
+        >
+          All
+        </button>
+        {QUESTION_TYPES.map(({ value, label }) => (
+          <button
+            key={value}
+            onClick={() => setTypeFilter(typeFilter === value ? '' : value)}
+            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+              typeFilter === value
+                ? 'bg-primary-600 text-white shadow-sm'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+
+        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 ml-3 mr-1">Sort:</span>
+        {sortOptions.map(({ value, label }) => (
+          <button
+            key={value}
+            onClick={() => setSortBy(value)}
+            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+              sortBy === value
+                ? 'bg-primary-600 text-white shadow-sm'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       {isLoading ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
@@ -75,7 +154,7 @@ export const QuestionsPage = () => {
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600">
             <path d="M5.566 4.657A4.505 4.505 0 016.75 4.5h10.5c.41 0 .806.055 1.183.157A3 3 0 0015.75 3h-7.5a3 3 0 00-2.684 1.657zM2.25 12a3 3 0 013-3h13.5a3 3 0 013 3v6a3 3 0 01-3 3H5.25a3 3 0 01-3-3v-6zM5.25 7.5c-.41 0-.806.055-1.184.157A3 3 0 016.75 6h10.5a3 3 0 012.683 1.657A4.505 4.505 0 0018.75 7.5H5.25z" />
           </svg>
-          <p className="mt-4 text-gray-500 dark:text-gray-400">No questions yet. Be the first to ask!</p>
+          <p className="mt-4 text-gray-500 dark:text-gray-400">No questions found matching your filters.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -96,7 +175,7 @@ export const QuestionsPage = () => {
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
                   {q.content}
                 </p>
-                <div className="mt-2 flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500">
+                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-400 dark:text-gray-500">
                   <Link to={`/profile/${q.author.username}`} className="relative z-10 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
                     {q.author.username}
                   </Link>
@@ -108,6 +187,11 @@ export const QuestionsPage = () => {
                     </svg>
                     {q.answerCount ?? 0}
                   </span>
+                  {q.type && q.type !== 'general' && (
+                    <span className="rounded-md bg-primary-100 px-2 py-0.5 text-[10px] font-medium text-primary-700 dark:bg-primary-900/40 dark:text-primary-300">
+                      {QUESTION_TYPES.find((t) => t.value === q.type)?.label ?? q.type}
+                    </span>
+                  )}
                 </div>
               </div>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="mt-1.5 h-5 w-5 shrink-0 text-gray-300 dark:text-gray-600">

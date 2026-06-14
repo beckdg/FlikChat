@@ -30,17 +30,42 @@ async function upsertTags(tagNames: string[]) {
 }
 
 export class QuestionService {
-  async getAll(page = 1, limit = 20) {
+  async getAll(
+    page = 1,
+    limit = 20,
+    filters?: { search?: string; type?: string; sortBy?: string; sortOrder?: string },
+  ) {
     const skip = (page - 1) * limit;
+    const { search, type, sortBy = 'newest', sortOrder = 'desc' } = filters ?? {};
+
+    const where: any = {};
+
+    if (type) {
+      where.type = type;
+    }
+
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { content: { contains: search, mode: 'insensitive' } },
+        { tags: { some: { tag: { name: { contains: search, mode: 'insensitive' } } } } },
+      ];
+    }
+
+    let orderBy: any = { createdAt: 'desc' };
+    if (sortBy === 'answers') {
+      orderBy = { answers: { _count: sortOrder } };
+    }
 
     const [items, total] = await Promise.all([
       prisma.question.findMany({
+        where,
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy,
         include: questionInclude,
       }),
-      prisma.question.count(),
+      prisma.question.count({ where }),
     ]);
 
     return {
