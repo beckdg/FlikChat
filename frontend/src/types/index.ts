@@ -20,6 +20,8 @@ export interface Question {
   authorId: string;
   createdAt: string;
   updatedAt: string;
+  author: { id: string; username: string; avatarUrl: string | null };
+  answerCount?: number;
 }
 
 export interface Answer {
@@ -27,6 +29,16 @@ export interface Answer {
   content: string;
   questionId: string;
   authorId: string;
+  createdAt: string;
+  updatedAt: string;
+  author: { id: string; username: string; avatarUrl: string | null };
+  voteCount: number;
+  roomId: string | null;
+}
+
+export interface ChatRoom {
+  id: string;
+  answerId: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -37,4 +49,13 @@ export interface ChatMessage {
   roomId: string;
   authorId: string;
   createdAt: string;
+  author: { id: string; username: string; avatarUrl: string | null };
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }

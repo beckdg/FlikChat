@@ -1,18 +1,23 @@
 import { Router } from 'express';
 import {
   getQuestions,
+  getTrendingQuestions,
   getQuestionById,
   createQuestion,
   updateQuestion,
   deleteQuestion,
 } from './question.controller';
+import { createQuestionSchema, updateQuestionSchema } from './question.validator';
+import { validate } from '../../middleware/validate';
+import { authenticate } from '../../middleware/auth.middleware';
 
 const router = Router();
 
 router.get('/', getQuestions);
+router.get('/trending', getTrendingQuestions);
 router.get('/:id', getQuestionById);
-router.post('/', createQuestion);
-router.patch('/:id', updateQuestion);
-router.delete('/:id', deleteQuestion);
+router.post('/', authenticate, validate(createQuestionSchema), createQuestion);
+router.patch('/:id', authenticate, validate(updateQuestionSchema), updateQuestion);
+router.delete('/:id', authenticate, deleteQuestion);
 
 export default router;

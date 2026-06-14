@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import {
   HomePage,
+  QuestionsPage,
   QuestionPage,
   LoginPage,
   RegisterPage,
@@ -15,6 +16,14 @@ export const router = createBrowserRouter([
     element: (
       <MainLayout>
         <HomePage />
+      </MainLayout>
+    ),
+  },
+  {
+    path: '/questions',
+    element: (
+      <MainLayout>
+        <QuestionsPage />
       </MainLayout>
     ),
   },

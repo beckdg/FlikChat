@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { getTrendingQuestions } from '@/services/questions';
 import { Button } from '@/components/ui/Button';
 
 const features = [
@@ -63,6 +65,13 @@ const features = [
 ];
 
 export const HomePage = () => {
+  const { data: trendingData, isLoading: trendingLoading } = useQuery({
+    queryKey: ['trending'],
+    queryFn: getTrendingQuestions,
+  });
+
+  const trending = trendingData?.data ?? [];
+
   return (
     <div className="space-y-16 sm:space-y-24">
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-purple-800 shadow-2xl shadow-primary-500/20 dark:from-primary-950 dark:via-primary-900 dark:to-purple-950">
@@ -93,17 +102,69 @@ export const HomePage = () => {
                 Get Started Free
               </Button>
             </Link>
-            <Link to="/login">
+            <Link to="/questions">
               <Button
                 variant="secondary"
                 className="!border-white/25 !bg-white/10 !text-white !shadow-lg hover:!bg-white/20 dark:!border-white/15"
               >
-                Sign In
+                Browse Questions
               </Button>
             </Link>
           </div>
         </div>
       </section>
+
+      {!trendingLoading && trending.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
+                🔥 Trending Now
+              </h2>
+              <p className="mt-1 text-gray-500 dark:text-gray-400">
+                Most active questions from the past week
+              </p>
+            </div>
+            <Link
+              to="/questions"
+              className="text-sm font-medium text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+            >
+              View all &rarr;
+            </Link>
+          </div>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            {trending.map((q) => (
+              <Link
+                key={q.id}
+                to={`/questions/${q.id}`}
+                className="card group flex items-start gap-4 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+              >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-purple-600 text-sm font-bold text-white shadow-md shadow-primary-500/15">
+                  {q.author.username.charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-primary-600 dark:group-hover:text-primary-400">
+                    {q.title}
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 line-clamp-1">
+                    {q.content}
+                  </p>
+                  <div className="mt-2 flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
+                    <span>{q.author.username}</span>
+                    <span className="flex items-center gap-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                        <path d="M3.505 2.365A41.369 41.369 0 019 2c1.863 0 3.697.124 5.495.365 1.247.167 2.18 1.108 2.435 2.268a4.45 4.45 0 00-.577-.069 43.141 43.141 0 00-4.706 0C9.229 4.696 7.5 6.727 7.5 8.998v2.24c0 1.413.67 2.735 1.76 3.562l-2.98 2.98A.75.75 0 015 17.25v-3.443c-.501-.048-1-.106-1.495-.172C2.033 13.438 1 12.162 1 10.655V4.706c0-1.57 1.176-2.895 2.505-2.341z" />
+                        <path d="M14.5 6.5c1.064 0 2.09.07 3.09.195 1.416.177 2.41 1.36 2.41 2.74v3.346c0 1.506-1.032 2.782-2.505 2.942-.494.066-.994.124-1.495.172v3.443a.75.75 0 01-1.28.53l-2.98-2.98a4.47 4.47 0 01-.596-.595 3.5 3.5 0 011.09-.329c.588-.083 1.187-.15 1.79-.2A4.46 4.46 0 0115 11.24v-2.24c0-1.364-.625-2.602-1.622-3.5H14.5z" />
+                      </svg>
+                      {q.answerCount ?? 0}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section>
         <div className="mx-auto max-w-2xl text-center">
@@ -147,6 +208,9 @@ export const HomePage = () => {
           <div className="mt-6 flex flex-wrap justify-center gap-4">
             <Link to="/register">
               <Button size="lg">Create Your Account</Button>
+            </Link>
+            <Link to="/questions">
+              <Button variant="secondary" size="lg">Browse Questions</Button>
             </Link>
           </div>
         </div>
