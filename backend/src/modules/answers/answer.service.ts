@@ -59,6 +59,7 @@ export class AnswerService {
       where: { id: data.questionId },
     });
     if (!question) throw new AppError(404, 'Question not found');
+    if (question.authorId === authorId) throw new AppError(403, 'You cannot answer your own question');
 
     const answer = await prisma.answer.create({
       data: {

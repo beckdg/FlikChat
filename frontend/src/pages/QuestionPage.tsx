@@ -357,22 +357,30 @@ export const QuestionPage = () => {
       </div>
 
       {isAuthenticated ? (
-        <form onSubmit={handleSubmit} className="card p-6 space-y-4">
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100">Your Answer</h3>
-          <textarea
-            className="input-field min-h-[120px] resize-y"
-            placeholder="Write your answer..."
-            value={answerContent}
-            onChange={(e) => setAnswerContent(e.target.value)}
-            required
-            minLength={10}
-          />
-          <div className="flex justify-end">
-            <Button type="submit" isLoading={createAnswerMutation.isPending}>
-              Post Answer
-            </Button>
+        isOwnQuestion ? (
+          <div className="card p-6 text-center">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              You cannot answer your own question
+            </p>
           </div>
-        </form>
+        ) : (
+          <form onSubmit={handleSubmit} className="card p-6 space-y-4">
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100">Your Answer</h3>
+            <textarea
+              className="input-field min-h-[120px] resize-y"
+              placeholder="Write your answer..."
+              value={answerContent}
+              onChange={(e) => setAnswerContent(e.target.value)}
+              required
+              minLength={10}
+            />
+            <div className="flex justify-end">
+              <Button type="submit" isLoading={createAnswerMutation.isPending}>
+                Post Answer
+              </Button>
+            </div>
+          </form>
+        )
       ) : (
         <div className="card p-6 text-center">
           <p className="text-sm text-gray-500 dark:text-gray-400">
