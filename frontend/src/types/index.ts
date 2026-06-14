@@ -20,16 +20,33 @@ export interface ApiResponse<T = unknown> {
   errors?: unknown;
 }
 
+export interface Tag {
+  id: string;
+  name: string;
+}
+
 export interface Question {
   id: string;
   title: string;
   content: string;
+  type: string;
   authorId: string;
   createdAt: string;
   updatedAt: string;
   author: { id: string; username: string; avatarUrl: string | null };
   answerCount?: number;
+  tags?: Tag[];
 }
+
+export type QuestionType = 'general' | 'discussion' | 'help' | 'idea' | 'poll';
+
+export const QUESTION_TYPES: { value: QuestionType; label: string }[] = [
+  { value: 'general', label: 'General' },
+  { value: 'discussion', label: 'Discussion' },
+  { value: 'help', label: 'Help' },
+  { value: 'idea', label: 'Idea' },
+  { value: 'poll', label: 'Poll' },
+];
 
 export interface Answer {
   id: string;

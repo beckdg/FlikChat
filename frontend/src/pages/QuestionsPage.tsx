@@ -5,13 +5,12 @@ import { getQuestions, createQuestion } from '@/services/questions';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/Button';
 import { UserAvatar } from '@/components/ui/UserAvatar';
+import { AskQuestion } from '@/components/ui/AskQuestion';
 
 export const QuestionsPage = () => {
   const { isAuthenticated } = useAuthStore();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
 
   const { data, isLoading } = useQuery({
     queryKey: ['questions'],
@@ -22,18 +21,9 @@ export const QuestionsPage = () => {
     mutationFn: createQuestion,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['questions'] });
-      setTitle('');
-      setContent('');
       setShowForm(false);
     },
   });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (title.trim() && content.trim()) {
-      mutate({ title: title.trim(), content: content.trim() });
-    }
-  };
 
   const questions = data?.data?.items ?? [];
 
@@ -54,42 +44,11 @@ export const QuestionsPage = () => {
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="card p-6 space-y-4 animate-slide-down">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-              Title
-            </label>
-            <input
-              className="input-field"
-              placeholder="What's your question?"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-              minLength={5}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-              Content
-            </label>
-            <textarea
-              className="input-field min-h-[120px] resize-y"
-              placeholder="Provide some details..."
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              required
-              minLength={10}
-            />
-          </div>
-          <div className="flex justify-end gap-3">
-            <Button variant="ghost" type="button" onClick={() => setShowForm(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" isLoading={isPending}>
-              Post Question
-            </Button>
-          </div>
-        </form>
+        <AskQuestion
+          onSubmit={(data) => mutate(data)}
+          onCancel={() => setShowForm(false)}
+          isPending={isPending}
+        />
       )}
 
       {isLoading ? (

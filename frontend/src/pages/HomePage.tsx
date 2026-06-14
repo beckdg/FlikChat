@@ -6,6 +6,7 @@ import { getMyProfile } from '@/services/users';
 import { useAuthStore } from '@/store/authStore';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { Button } from '@/components/ui/Button';
+import { AskQuestion } from '@/components/ui/AskQuestion';
 
 const features = [
   {
@@ -74,8 +75,6 @@ export const HomePage = () => {
   const queryClient = useQueryClient();
 
   const [showAskForm, setShowAskForm] = useState(false);
-  const [askTitle, setAskTitle] = useState('');
-  const [askContent, setAskContent] = useState('');
 
   const { data: trendingData, isLoading: trendingLoading } = useQuery({
     queryKey: ['trending'],
@@ -92,19 +91,10 @@ export const HomePage = () => {
     mutationFn: createQuestion,
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ['trending'] });
-      setAskTitle('');
-      setAskContent('');
       setShowAskForm(false);
       navigate(`/questions/${res.data?.id}`);
     },
   });
-
-  const handleAskSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (askTitle.trim() && askContent.trim()) {
-      createMutation.mutate({ title: askTitle.trim(), content: askContent.trim() });
-    }
-  };
 
   const trending = trendingData?.data ?? [];
   const profile = profileData?.data;
@@ -161,33 +151,11 @@ export const HomePage = () => {
         </div>
 
         {showAskForm && (
-          <form onSubmit={handleAskSubmit} className="card p-5 sm:p-6 space-y-4 animate-slide-down">
-            <h3 className="font-semibold text-gray-900 dark:text-gray-100">Ask a Question</h3>
-            <div>
-              <input
-                className="input-field"
-                placeholder="What's on your mind?"
-                value={askTitle}
-                onChange={(e) => setAskTitle(e.target.value)}
-                required
-                minLength={5}
-              />
-            </div>
-            <div>
-              <textarea
-                className="input-field min-h-[100px] resize-y"
-                placeholder="Provide some details..."
-                value={askContent}
-                onChange={(e) => setAskContent(e.target.value)}
-                required
-                minLength={10}
-              />
-            </div>
-            <div className="flex justify-end gap-3">
-              <Button variant="ghost" type="button" onClick={() => setShowAskForm(false)}>Cancel</Button>
-              <Button type="submit" isLoading={createMutation.isPending}>Post Question</Button>
-            </div>
-          </form>
+          <AskQuestion
+            onSubmit={(data) => createMutation.mutate(data)}
+            onCancel={() => setShowAskForm(false)}
+            isPending={createMutation.isPending}
+          />
         )}
 
         {!trendingLoading && trending.length > 0 && (
