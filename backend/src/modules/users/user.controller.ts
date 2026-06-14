@@ -1,14 +1,63 @@
-import { Request, Response } from 'express';
-import { sendError } from '../../utils/response';
+import { Request, Response, NextFunction } from 'express';
+import { userService } from './user.service';
+import { sendSuccess } from '../../utils/response';
+import type { AuthenticatedRequest } from '../../middleware/auth.middleware';
+import { uploadToCloudinary } from '../../services/upload';
 
-export const getProfile = (_req: Request, res: Response): Response => {
-  return sendError(res, 'Not implemented', 501);
+export const getProfile = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId } = (req as AuthenticatedRequest).user!;
+    const result = await userService.getProfile(userId);
+    sendSuccess(res, result);
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const updateProfile = (_req: Request, res: Response): Response => {
-  return sendError(res, 'Not implemented', 501);
+export const getProfileByUsername = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const username = req.params.username as string;
+    const result = await userService.getProfileByUsername(username);
+    sendSuccess(res, result);
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const getUserById = (_req: Request, res: Response): Response => {
-  return sendError(res, 'Not implemented', 501);
+export const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId } = (req as AuthenticatedRequest).user!;
+    const result = await userService.updateProfile(userId, req.body);
+    sendSuccess(res, result, 'Profile updated');
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const uploadAvatar = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId } = (req as AuthenticatedRequest).user!;
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file provided' });
+    }
+    const url = await uploadToCloudinary(req.file.buffer, 'avatars');
+    const result = await userService.updateProfile(userId, { avatarUrl: url });
+    sendSuccess(res, result, 'Avatar updated');
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const uploadCover = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId } = (req as AuthenticatedRequest).user!;
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file provided' });
+    }
+    const url = await uploadToCloudinary(req.file.buffer, 'covers');
+    const result = await userService.updateProfile(userId, { coverUrl: url });
+    sendSuccess(res, result, 'Cover updated');
+  } catch (error) {
+    next(error);
+  }
 };

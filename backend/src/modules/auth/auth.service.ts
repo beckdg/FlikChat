@@ -23,7 +23,7 @@ export class AuthService {
 
     const user = await prisma.user.create({
       data: { email, username, password: hashedPassword },
-      select: { id: true, email: true, username: true, bio: true, avatarUrl: true, createdAt: true },
+      select: { id: true, email: true, username: true, bio: true, avatarUrl: true, coverUrl: true, createdAt: true },
     });
 
     const accessToken = this.generateToken(user);
@@ -47,7 +47,7 @@ export class AuthService {
     const accessToken = this.generateToken(user);
 
     return {
-      user: { id: user.id, email: user.email, username: user.username, bio: user.bio, avatarUrl: user.avatarUrl, createdAt: user.createdAt },
+      user: { id: user.id, email: user.email, username: user.username, bio: user.bio, avatarUrl: user.avatarUrl, coverUrl: user.coverUrl, createdAt: user.createdAt },
       tokens: { accessToken },
     };
   }
@@ -55,7 +55,7 @@ export class AuthService {
   async getMe(userId: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, username: true, bio: true, avatarUrl: true, createdAt: true },
+      select: { id: true, email: true, username: true, bio: true, avatarUrl: true, coverUrl: true, createdAt: true },
     });
     if (!user) {
       throw new AppError(404, 'User not found');

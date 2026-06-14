@@ -4,6 +4,13 @@ export interface User {
   username: string;
   bio?: string | null;
   avatarUrl?: string | null;
+  coverUrl?: string | null;
+}
+
+export interface UserProfile extends User {
+  questionCount: number;
+  answerCount: number;
+  createdAt: string;
 }
 
 export interface ApiResponse<T = unknown> {
