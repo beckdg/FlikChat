@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { RouterProvider } from 'react-router-dom';
 import { QueryProvider } from '@/context/QueryProvider';
+import { ThemeProvider } from '@/context/ThemeContext';
 import { router } from '@/routes/router';
 import { useAuthStore } from '@/store/authStore';
 import { fetchMe } from '@/services/auth';
@@ -23,8 +24,10 @@ export const App = () => {
   }, [accessToken, setAuth, clearAuth]);
 
   return (
-    <QueryProvider>
-      <RouterProvider router={router} />
-    </QueryProvider>
+    <ThemeProvider>
+      <QueryProvider>
+        <RouterProvider router={router} />
+      </QueryProvider>
+    </ThemeProvider>
   );
 };

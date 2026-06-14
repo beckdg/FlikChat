@@ -22,8 +22,7 @@ export const LoginPage = () => {
       }
     },
     onError: (err: unknown) => {
-      const msg =
-        err instanceof Error ? err.message : 'Login failed. Please try again.';
+      const msg = err instanceof Error ? err.message : 'Login failed. Please try again.';
       setError(msg);
     },
   });
@@ -35,40 +34,60 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="mx-auto max-w-md">
-      <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
-        <h1 className="text-2xl font-bold text-gray-900">Sign In</h1>
-        <p className="mt-2 text-gray-500">Welcome back to FlikChat</p>
+    <div className="flex min-h-[70vh] items-center justify-center">
+      <div className="w-full max-w-md animate-scale-in">
+        <div className="card-glass p-8 sm:p-10">
+          <div className="text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-purple-600 text-2xl font-bold text-white shadow-lg shadow-primary-500/25">
+              F
+            </div>
+            <h1 className="mt-5 text-2xl font-bold text-gray-900 dark:text-gray-100">
+              Welcome Back
+            </h1>
+            <p className="mt-1.5 text-gray-500 dark:text-gray-400">
+              Sign in to your FlikChat account
+            </p>
+          </div>
 
-        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-          <Input
-            label="Email"
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <Input
-            label="Password"
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          <Button type="submit" className="w-full" isLoading={isPending}>
-            Sign In
-          </Button>
-        </form>
+          <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+            <Input
+              label="Email"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              icon="email"
+            />
+            <Input
+              label="Password"
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              icon="lock"
+            />
+            {error && (
+              <div className="flex items-center gap-2.5 rounded-xl bg-red-50 p-3.5 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 shrink-0">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
+                </svg>
+                {error}
+              </div>
+            )}
+            <Button type="submit" className="w-full" size="lg" isLoading={isPending}>
+              Sign In
+            </Button>
+          </form>
 
-        <p className="mt-4 text-center text-sm text-gray-500">
-          Don&apos;t have an account?{' '}
-          <Link to="/register" className="font-medium text-primary-600 hover:text-primary-700">
-            Register
-          </Link>
-        </p>
+          <p className="mt-7 text-center text-sm text-gray-500 dark:text-gray-400">
+            Don&apos;t have an account?{' '}
+            <Link to="/register" className="font-semibold text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
+              Register
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
