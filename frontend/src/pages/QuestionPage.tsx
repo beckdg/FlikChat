@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getQuestionById, updateQuestion, deleteQuestion, toggleQuestionLike } from '@/services/questions';
@@ -21,6 +21,8 @@ export const QuestionPage = () => {
   const [editAnswerContent, setEditAnswerContent] = useState('');
   const [showDeleteQuestionModal, setShowDeleteQuestionModal] = useState(false);
   const [showDeleteAnswerModal, setShowDeleteAnswerModal] = useState<string | null>(null);
+  const [showAnswerForm, setShowAnswerForm] = useState(false);
+  const formRef = useRef<HTMLDivElement>(null);
   const userId = user?.id;
 
   const { data: qData, isLoading: qLoading } = useQuery({
@@ -106,6 +108,12 @@ export const QuestionPage = () => {
   const question = qData?.data;
   const answers = aData?.data ?? [];
   const isOwnQuestion = question?.author.id === user?.id;
+
+  useEffect(() => {
+    if (showAnswerForm && formRef.current) {
+      formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [showAnswerForm]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -238,6 +246,22 @@ export const QuestionPage = () => {
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             Answers ({answers.length})
           </h2>
+          {isAuthenticated && !isOwnQuestion && (
+            <button
+              onClick={() => setShowAnswerForm(!showAnswerForm)}
+              className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-medium transition-all ${
+                showAnswerForm
+                  ? 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+                  : 'bg-primary-50 text-primary-600 hover:bg-primary-100 dark:bg-primary-900/30 dark:text-primary-400 dark:hover:bg-primary-900/50'
+              }`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                <path d="M3.505 2.365A41.369 41.369 0 019 2c1.863 0 3.697.124 5.495.365 1.247.167 2.18 1.108 2.435 2.268a4.45 4.45 0 00-.577-.069 43.141 43.141 0 00-4.706 0C9.229 4.696 7.5 6.727 7.5 8.998v2.24c0 1.413.67 2.735 1.76 3.562l-2.98 2.98A.75.75 0 015 17.25v-3.443c-.501-.048-1-.106-1.495-.172C2.033 13.438 1 12.162 1 10.655V4.706c0-1.57 1.176-2.895 2.505-2.341z" />
+                <path d="M14.5 6.5c1.064 0 2.09.07 3.09.195 1.416.177 2.41 1.36 2.41 2.74v3.346c0 1.506-1.032 2.782-2.505 2.942-.494.066-.994.124-1.495.172v3.443a.75.75 0 01-1.28.53l-2.98-2.98a4.47 4.47 0 01-.596-.595 3.5 3.5 0 011.09-.329c.588-.083 1.187-.15 1.79-.2A4.46 4.46 0 0115 11.24v-2.24c0-1.364-.625-2.602-1.622-3.5H14.5z" />
+              </svg>
+              {showAnswerForm ? 'Cancel' : 'Write Answer'}
+            </button>
+          )}
         </div>
 
         {aLoading ? (
@@ -374,77 +398,105 @@ export const QuestionPage = () => {
         )}
       </div>
 
-      {isAuthenticated ? (
-        isOwnQuestion ? (
-          <div className="card overflow-hidden">
-            <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-500 dark:bg-amber-900/30 dark:text-amber-400">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-6 w-6">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div>
-                <p className="font-medium text-gray-900 dark:text-gray-100">You cannot answer your own question</p>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Wait for the community to share their answers</p>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="card overflow-hidden">
-            <div className="border-b border-gray-100 bg-gradient-to-r from-emerald-50/50 to-transparent px-5 py-4 dark:border-gray-800 dark:from-emerald-900/10">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                    <path d="M3.505 2.365A41.369 41.369 0 019 2c1.863 0 3.697.124 5.495.365 1.247.167 2.18 1.108 2.435 2.268a4.45 4.45 0 00-.577-.069 43.141 43.141 0 00-4.706 0C9.229 4.696 7.5 6.727 7.5 8.998v2.24c0 1.413.67 2.735 1.76 3.562l-2.98 2.98A.75.75 0 015 17.25v-3.443c-.501-.048-1-.106-1.495-.172C2.033 13.438 1 12.162 1 10.655V4.706c0-1.57 1.176-2.895 2.505-2.341z" />
-                    <path d="M14.5 6.5c1.064 0 2.09.07 3.09.195 1.416.177 2.41 1.36 2.41 2.74v3.346c0 1.506-1.032 2.782-2.505 2.942-.494.066-.994.124-1.495.172v3.443a.75.75 0 01-1.28.53l-2.98-2.98a4.47 4.47 0 01-.596-.595 3.5 3.5 0 011.09-.329c.588-.083 1.187-.15 1.79-.2A4.46 4.46 0 0115 11.24v-2.24c0-1.364-.625-2.602-1.622-3.5H14.5z" />
+      {!isAuthenticated && (
+        <div className="flex justify-center">
+          <button
+            onClick={() => setShowAnswerForm(!showAnswerForm)}
+            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
+              showAnswerForm
+                ? 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+                : 'bg-primary-50 text-primary-600 hover:bg-primary-100 dark:bg-primary-900/30 dark:text-primary-400 dark:hover:bg-primary-900/50'
+            }`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+              <path d="M3.505 2.365A41.369 41.369 0 019 2c1.863 0 3.697.124 5.495.365 1.247.167 2.18 1.108 2.435 2.268a4.45 4.45 0 00-.577-.069 43.141 43.141 0 00-4.706 0C9.229 4.696 7.5 6.727 7.5 8.998v2.24c0 1.413.67 2.735 1.76 3.562l-2.98 2.98A.75.75 0 015 17.25v-3.443c-.501-.048-1-.106-1.495-.172C2.033 13.438 1 12.162 1 10.655V4.706c0-1.57 1.176-2.895 2.505-2.341z" />
+              <path d="M14.5 6.5c1.064 0 2.09.07 3.09.195 1.416.177 2.41 1.36 2.41 2.74v3.346c0 1.506-1.032 2.782-2.505 2.942-.494.066-.994.124-1.495.172v3.443a.75.75 0 01-1.28.53l-2.98-2.98a4.47 4.47 0 01-.596-.595 3.5 3.5 0 011.09-.329c.588-.083 1.187-.15 1.79-.2A4.46 4.46 0 0115 11.24v-2.24c0-1.364-.625-2.602-1.622-3.5H14.5z" />
+            </svg>
+            {showAnswerForm ? 'Cancel' : 'Write Answer'}
+          </button>
+        </div>
+      )}
+
+      {showAnswerForm && (
+      <div ref={formRef}>
+        {isAuthenticated ? (
+          isOwnQuestion ? (
+            <div className="card overflow-hidden">
+              <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-500 dark:bg-amber-900/30 dark:text-amber-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-6 w-6">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-gray-100">Your Answer</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Help the author by sharing your knowledge</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">You cannot answer your own question</p>
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Wait for the community to share their answers</p>
                 </div>
               </div>
             </div>
-            <div className="p-5 sm:p-6 space-y-4">
-              <div className="relative">
-                <textarea
-                  className="input-field min-h-[140px] resize-y pb-7"
-                  placeholder="Write a detailed answer. Include examples, code snippets, or references to help clarify your point..."
-                  value={answerContent}
-                  onChange={(e) => setAnswerContent(e.target.value)}
-                  required
-                  minLength={10}
-                  maxLength={5000}
-                />
-                <span className="pointer-events-none absolute bottom-2 right-3 text-[10px] font-medium text-gray-400 dark:text-gray-500">
-                  {answerContent.length}/5000
-                </span>
+          ) : (
+            <form onSubmit={handleSubmit} className="card overflow-hidden">
+              <div className="border-b border-gray-100 bg-gradient-to-r from-emerald-50/50 to-transparent px-5 py-4 dark:border-gray-800 dark:from-emerald-900/10">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                      <path d="M3.505 2.365A41.369 41.369 0 019 2c1.863 0 3.697.124 5.495.365 1.247.167 2.18 1.108 2.435 2.268a4.45 4.45 0 00-.577-.069 43.141 43.141 0 00-4.706 0C9.229 4.696 7.5 6.727 7.5 8.998v2.24c0 1.413.67 2.735 1.76 3.562l-2.98 2.98A.75.75 0 015 17.25v-3.443c-.501-.048-1-.106-1.495-.172C2.033 13.438 1 12.162 1 10.655V4.706c0-1.57 1.176-2.895 2.505-2.341z" />
+                      <path d="M14.5 6.5c1.064 0 2.09.07 3.09.195 1.416.177 2.41 1.36 2.41 2.74v3.346c0 1.506-1.032 2.782-2.505 2.942-.494.066-.994.124-1.495.172v3.443a.75.75 0 01-1.28.53l-2.98-2.98a4.47 4.47 0 01-.596-.595 3.5 3.5 0 011.09-.329c.588-.083 1.187-.15 1.79-.2A4.46 4.46 0 0115 11.24v-2.24c0-1.364-.625-2.602-1.622-3.5H14.5z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 dark:text-gray-100">Your Answer</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Help the author by sharing your knowledge</p>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-gray-400 dark:text-gray-500">
-                  Provide a clear and thorough answer
-                </p>
-                <Button type="submit" isLoading={createAnswerMutation.isPending}>
-                  Post Answer
-                </Button>
+              <div className="p-5 sm:p-6 space-y-4">
+                <div className="relative">
+                  <textarea
+                    className="input-field min-h-[140px] resize-y pb-7"
+                    placeholder="Write a detailed answer. Include examples, code snippets, or references to help clarify your point..."
+                    value={answerContent}
+                    onChange={(e) => setAnswerContent(e.target.value)}
+                    required
+                    minLength={10}
+                    maxLength={5000}
+                  />
+                  <span className="pointer-events-none absolute bottom-2 right-3 text-[10px] font-medium text-gray-400 dark:text-gray-500">
+                    {answerContent.length}/5000
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                    Provide a clear and thorough answer
+                  </p>
+                  <Button type="submit" isLoading={createAnswerMutation.isPending}>
+                    Post Answer
+                  </Button>
+                </div>
+              </div>
+            </form>
+          )
+        ) : (
+          <div className="card overflow-hidden">
+            <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-6 w-6">
+                  <path d="M10 1a4.5 4.5 0 00-4.5 4.5v2H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 4.5V7H7V5.5a3 3 0 016 0z" />
+                </svg>
+              </div>
+              <div>
+                <p className="font-medium text-gray-900 dark:text-gray-100">Sign in to post an answer</p>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">You need to be signed in to contribute</p>
               </div>
             </div>
-          </form>
-        )
-      ) : (
-        <div className="card overflow-hidden">
-          <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-6 w-6">
-                <path d="M10 1a4.5 4.5 0 00-4.5 4.5v2H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 4.5V7H7V5.5a3 3 0 016 0z" />
-              </svg>
-            </div>
-            <div>
-              <p className="font-medium text-gray-900 dark:text-gray-100">Sign in to post an answer</p>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">You need to be signed in to contribute</p>
+            <div className="border-t border-gray-100 px-6 py-4 text-center dark:border-gray-800">
+              <Link to="/login" className="btn-primary inline-flex text-sm">
+                Sign In
+              </Link>
             </div>
           </div>
-        </div>
+        )}
+      </div>
       )}
 
     </div>
