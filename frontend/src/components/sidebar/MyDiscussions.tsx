@@ -25,7 +25,7 @@ export const MyDiscussions = () => {
       </div>
 
       {isLoading ? (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 grid-cols-1">
           {[1, 2].map((i) => (
             <div key={i} className="card p-4 animate-pulse">
               <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-700" />
@@ -34,7 +34,7 @@ export const MyDiscussions = () => {
           ))}
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 grid-cols-1">
           {items.map((d) => (
             <Link
               key={d.roomId}
