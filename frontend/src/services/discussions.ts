@@ -1,8 +1,11 @@
 import { api } from './api';
-import type { ApiResponse, ChatRoom, ChatMessage, PaginatedResponse, ActiveDiscussion } from '@/types';
+import type { ApiResponse, ChatRoom, ChatMessage, PaginatedResponse, ActiveDiscussion, TrendingDiscussion } from '@/types';
 
 export const getMyActiveDiscussions = () =>
   api.get<ApiResponse<ActiveDiscussion[]>>('/discussions/my-active').then((r) => r.data);
+
+export const getTrendingDiscussions = (limit = 5) =>
+  api.get<ApiResponse<TrendingDiscussion[]>>('/discussions/trending', { params: { limit } }).then((r) => r.data);
 
 export const getRoomByAnswerId = (answerId: string) =>
   api.get<ApiResponse<ChatRoom>>(`/discussions/answer/${answerId}`).then((r) => r.data);

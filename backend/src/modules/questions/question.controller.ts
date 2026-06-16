@@ -70,6 +70,29 @@ export const deleteQuestion = async (req: Request, res: Response, next: NextFunc
   }
 };
 
+export const getFeed = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const tab = (req.query.tab as string) || 'recent';
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 20));
+    const userId = req.query.userId as string | undefined;
+    const result = await questionService.getFeed(tab, limit, page, userId);
+    sendSuccess(res, result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getPopularTags = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const limit = Math.min(20, Math.max(1, parseInt(req.query.limit as string) || 10));
+    const result = await questionService.getPopularTags(limit);
+    sendSuccess(res, result);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const likeQuestion = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { userId } = (req as AuthenticatedRequest).user!;

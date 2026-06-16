@@ -7,6 +7,8 @@ import {
   updateQuestion,
   deleteQuestion,
   likeQuestion,
+  getFeed,
+  getPopularTags,
 } from './question.controller';
 import { createQuestionSchema, updateQuestionSchema } from './question.validator';
 import { validate } from '../../middleware/validate';
@@ -15,7 +17,9 @@ import { authenticate } from '../../middleware/auth.middleware';
 const router = Router();
 
 router.get('/', getQuestions);
+router.get('/feed', getFeed);
 router.get('/trending', getTrendingQuestions);
+router.get('/popular-tags', getPopularTags);
 router.get('/:id', getQuestionById);
 router.post('/', authenticate, validate(createQuestionSchema), createQuestion);
 router.patch('/:id', authenticate, validate(updateQuestionSchema), updateQuestion);

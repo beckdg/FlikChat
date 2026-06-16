@@ -87,6 +87,16 @@ export const deleteMessage = async (req: Request, res: Response, next: NextFunct
   }
 };
 
+export const getTrendingDiscussions = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const limit = Math.min(20, Math.max(1, parseInt(req.query.limit as string) || 5));
+    const result = await discussionService.getTrendingDiscussions(limit);
+    sendSuccess(res, result);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getMyActiveDiscussions = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { userId } = (req as AuthenticatedRequest).user!;

@@ -9,6 +9,23 @@ const questionInclude = {
   _count: { select: { answers: true, votes: true } },
 };
 
+async function addDiscussionCounts(questions: any[]) {
+  if (questions.length === 0) return questions;
+  const ids = questions.map((q: any) => q.id);
+  const answersWithRooms = await prisma.answer.findMany({
+    where: { questionId: { in: ids }, chatRoom: { isNot: null } },
+    select: { questionId: true },
+  });
+  const countMap = new Map<string, number>();
+  for (const a of answersWithRooms) {
+    countMap.set(a.questionId, (countMap.get(a.questionId) ?? 0) + 1);
+  }
+  return questions.map((q: any) => ({
+    ...q,
+    discussionCount: countMap.get(q.id) ?? 0,
+  }));
+}
+
 function formatQuestion(q: any) {
   const { _count, tags, ...rest } = q;
   return {
@@ -168,6 +185,61 @@ export class QuestionService {
     if (existing.authorId !== authorId) throw new AppError(403, 'Not authorized');
 
     await prisma.question.delete({ where: { id } });
+  }
+
+  async getFeed(
+    tab: string,
+    limit = 20,
+    page = 1,
+    _userId?: string,
+  ) {
+    const skip = (page - 1) * limit;
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    let where: any = {};
+    let orderBy: any = { createdAt: 'desc' };
+
+    if (tab === 'trending') {
+      where.createdAt = { gte: sevenDaysAgo };
+    } else if (tab === 'unanswered') {
+      where.answers = { none: {} };
+    }
+
+    const [items, total] = await Promise.all([
+      prisma.question.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy,
+        include: questionInclude,
+      }),
+      prisma.question.count({ where }),
+    ]);
+
+    let formatted = items.map(formatQuestion);
+
+    if (tab === 'trending') {
+      formatted.sort((a: any, b: any) => (b.answerCount + b.likeCount) - (a.answerCount + a.likeCount));
+    }
+
+    formatted = await addDiscussionCounts(formatted);
+
+    return {
+      items: formatted,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  async getPopularTags(limit = 10) {
+    const tags = await prisma.tag.findMany({
+      take: limit,
+      orderBy: { questions: { _count: 'desc' } },
+      include: { _count: { select: { questions: true } } },
+    });
+    return tags.map((t) => ({ id: t.id, name: t.name, count: t._count.questions }));
   }
 
   async toggleLike(questionId: string, userId: string) {

@@ -138,6 +138,39 @@ export class DiscussionService {
     await prisma.chatMessage.delete({ where: { id: messageId } });
   }
 
+  async getTrendingDiscussions(limit = 5) {
+    const rooms = await prisma.chatRoom.findMany({
+      take: limit,
+      orderBy: { updatedAt: 'desc' },
+      include: {
+        _count: { select: { messages: true } },
+        messages: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: { content: true, createdAt: true },
+        },
+        answer: {
+          select: {
+            id: true,
+            content: true,
+            question: { select: { id: true, title: true } },
+          },
+        },
+      },
+    });
+
+    return rooms
+      .filter((r) => r._count.messages > 0)
+      .map((room) => ({
+        roomId: room.id,
+        questionId: room.answer.question.id,
+        questionTitle: room.answer.question.title,
+        answerSnippet: room.answer.content.slice(0, 150),
+        messageCount: room._count.messages,
+        lastActivity: room.messages[0]?.createdAt ?? null,
+      }));
+  }
+
   async getMyActiveDiscussions(userId: string) {
     const roomIds = await prisma.chatMessage.findMany({
       where: { authorId: userId },

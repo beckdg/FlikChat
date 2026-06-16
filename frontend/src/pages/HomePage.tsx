@@ -1,13 +1,21 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getTrendingQuestions, createQuestion } from '@/services/questions';
+import { getFeed, createQuestion } from '@/services/questions';
 import { getMyProfile } from '@/services/users';
 import { useAuthStore } from '@/store/authStore';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { Button } from '@/components/ui/Button';
+import { FeedCard } from '@/components/ui/FeedCard';
 import { AskQuestion } from '@/components/ui/AskQuestion';
-import { SidebarLayout, TrendingQuestions, ActiveDiscussions, QuickActions, MyDiscussions } from '@/components/sidebar';
+import { SidebarLayout, MyDiscussions, PopularTags, TrendingQuestions } from '@/components/sidebar';
+
+const feedTabs = [
+  { id: 'for-you', label: 'For You' },
+  { id: 'trending', label: 'Trending' },
+  { id: 'recent', label: 'Recent' },
+  { id: 'unanswered', label: 'Unanswered' },
+];
 
 const features = [
   {
@@ -75,11 +83,13 @@ export const HomePage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  const [activeTab, setActiveTab] = useState('for-you');
   const [showAskForm, setShowAskForm] = useState(false);
 
-  const { data: trendingData, isLoading: trendingLoading } = useQuery({
-    queryKey: ['trending'],
-    queryFn: getTrendingQuestions,
+  const { data: feedData, isLoading: feedLoading } = useQuery({
+    queryKey: ['feed', activeTab],
+    queryFn: () => getFeed(activeTab),
+    enabled: isAuthenticated,
   });
 
   const { data: profileData } = useQuery({
@@ -91,13 +101,13 @@ export const HomePage = () => {
   const createMutation = useMutation({
     mutationFn: createQuestion,
     onSuccess: (res) => {
-      queryClient.invalidateQueries({ queryKey: ['trending'] });
+      queryClient.invalidateQueries({ queryKey: ['feed'] });
       setShowAskForm(false);
       navigate(`/questions/${res.data?.id}`);
     },
   });
 
-  const trending = trendingData?.data ?? [];
+  const feed = feedData?.data?.items ?? [];
   const profile = profileData?.data;
 
   if (isAuthenticated) {
@@ -105,119 +115,128 @@ export const HomePage = () => {
       <SidebarLayout
         sidebar={
           <>
-            <QuickActions onAskQuestion={() => setShowAskForm((prev) => !prev)} />
+            <MyDiscussions />
+            <PopularTags />
             <TrendingQuestions />
-            <ActiveDiscussions />
           </>
         }
       >
-        <div className="space-y-8 animate-fade-in">
-        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-purple-800 shadow-2xl shadow-primary-500/20 dark:from-primary-950 dark:via-primary-900 dark:to-purple-950">
-          <div className="absolute inset-0 bg-grid opacity-30" />
-          <div className="relative px-6 py-8 sm:px-10 sm:py-10">
-            <div className="flex items-start gap-4 sm:gap-5">
-              <Link to="/profile">
-                <UserAvatar src={user?.avatarUrl} username={user?.username ?? 'U'} size="xl" className="ring-4 ring-white/20 shrink-0" />
-              </Link>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-xl sm:text-2xl font-bold text-white">
-                  Welcome back, {user?.username}
-                </h1>
-                <p className="mt-1 text-sm text-white/70">
-                  What would you like to explore today?
-                </p>
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <Button
-                    variant="primary"
-                    className="!bg-white !text-primary-700 !shadow-xl !shadow-black/10 hover:!bg-gray-100"
-                    onClick={() => setShowAskForm(!showAskForm)}
-                  >
-                    {showAskForm ? 'Cancel' : 'Ask a Question'}
-                  </Button>
-                  <Link to="/questions">
+        <div className="space-y-6 animate-fade-in">
+          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-purple-800 shadow-2xl shadow-primary-500/20 dark:from-primary-950 dark:via-primary-900 dark:to-purple-950">
+            <div className="absolute inset-0 bg-grid opacity-30" />
+            <div className="relative px-6 py-8 sm:px-10 sm:py-10">
+              <div className="flex items-start gap-4 sm:gap-5">
+                <Link to="/profile">
+                  <UserAvatar src={user?.avatarUrl} username={user?.username ?? 'U'} size="xl" className="ring-4 ring-white/20 shrink-0" />
+                </Link>
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-xl sm:text-2xl font-bold text-white">
+                    Welcome back, {user?.username}
+                  </h1>
+                  <p className="mt-1 text-sm text-white/70">
+                    What would you like to explore today?
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-3">
                     <Button
-                      variant="secondary"
-                      className="!border-white/25 !bg-white/10 !text-white hover:!bg-white/20"
+                      variant="primary"
+                      className="!bg-white !text-primary-700 !shadow-xl !shadow-black/10 hover:!bg-gray-100"
+                      onClick={() => setShowAskForm(!showAskForm)}
                     >
-                      Browse Questions
+                      {showAskForm ? 'Cancel' : 'Ask a Question'}
                     </Button>
-                  </Link>
-                </div>
-              </div>
-            </div>
-            {profile && (
-              <div className="mt-5 flex gap-6 sm:gap-8">
-                <div className="text-center">
-                  <p className="text-xl sm:text-2xl font-bold text-white">{profile.questionCount}</p>
-                  <p className="text-[11px] text-white/60 uppercase tracking-wider">Questions</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-xl sm:text-2xl font-bold text-white">{profile.answerCount}</p>
-                  <p className="text-[11px] text-white/60 uppercase tracking-wider">Answers</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {showAskForm && (
-          <div className="mx-auto max-w-2xl">
-            <AskQuestion
-              onSubmit={(data) => createMutation.mutate(data)}
-              onCancel={() => setShowAskForm(false)}
-              isPending={createMutation.isPending}
-            />
-          </div>
-        )}
-
-        <MyDiscussions />
-
-        {!trendingLoading && trending.length > 0 && (
-          <section>
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">🔥 Trending Now</h2>
-              <Link to="/questions" className="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
-                View all &rarr;
-              </Link>
-            </div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {trending.map((q) => (
-                <div key={q.id} className={`card group flex items-start gap-3 p-4 transition-all hover:-translate-y-0.5 hover:shadow-md ${q.author.id === user?.id ? 'border-l-4 border-l-primary-500' : ''}`}>
-                  <Link to={`/profile/${q.author.username}`} onClick={(e) => e.stopPropagation()}>
-                    <UserAvatar src={q.author.avatarUrl} username={q.author.username} size="md" />
-                  </Link>
-                  <div className="min-w-0 flex-1">
-                    <Link to={`/questions/${q.id}`} className="after:absolute after:inset-0">
-                      <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate text-sm group-hover:text-primary-600 dark:group-hover:text-primary-400">
-                        {q.title}
-                      </h3>
+                    <Link to="/questions">
+                      <Button
+                        variant="secondary"
+                        className="!border-white/25 !bg-white/10 !text-white hover:!bg-white/20"
+                      >
+                        Browse Questions
+                      </Button>
                     </Link>
-                    <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 line-clamp-1">{q.content}</p>
-                    <div className="mt-1.5 flex items-center gap-3 text-[11px] text-gray-400 dark:text-gray-500">
-                      <Link to={`/profile/${q.author.username}`} className="relative z-10 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
-                        {q.author.username}
-                      </Link>
-                      <span className="flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3">
-                          <path d="M3.505 2.365A41.369 41.369 0 019 2c1.863 0 3.697.124 5.495.365 1.247.167 2.18 1.108 2.435 2.268a4.45 4.45 0 00-.577-.069 43.141 43.141 0 00-4.706 0C9.229 4.696 7.5 6.727 7.5 8.998v2.24c0 1.413.67 2.735 1.76 3.562l-2.98 2.98A.75.75 0 015 17.25v-3.443c-.501-.048-1-.106-1.495-.172C2.033 13.438 1 12.162 1 10.655V4.706c0-1.57 1.176-2.895 2.505-2.341z" />
-                          <path d="M14.5 6.5c1.064 0 2.09.07 3.09.195 1.416.177 2.41 1.36 2.41 2.74v3.346c0 1.506-1.032 2.782-2.505 2.942-.494.066-.994.124-1.495.172v3.443a.75.75 0 01-1.28.53l-2.98-2.98a4.47 4.47 0 01-.596-.595 3.5 3.5 0 011.09-.329c.588-.083 1.187-.15 1.79-.2A4.46 4.46 0 0115 11.24v-2.24c0-1.364-.625-2.602-1.622-3.5H14.5z" />
-                        </svg>
-                        {q.answerCount ?? 0}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3">
-                          <path d="M1 8.25a1.25 1.25 0 112.5 0v7.5a1.25 1.25 0 11-2.5 0v-7.5zM11 3V1.7c0-.268.14-.526.395-.607A2 2 0 0114 3c0 .995-.182 1.948-.514 2.826-.204.54.166 1.174.744 1.174h2.52c1.243 0 2.261 1.01 2.146 2.247a23.864 23.864 0 01-1.341 5.974C17.153 16.323 16.072 17 14.9 17h-3.192a3 3 0 01-1.341-.317l-2.734-1.366A3 3 0 006.292 15H5V8h.963c.685 0 1.258-.483 1.612-1.068a4.011 4.011 0 012.166-1.73c.432-.143.853-.386 1.011-.814.16-.432.248-.9.248-1.388z" />
-                        </svg>
-                        {q.likeCount ?? 0}
-                      </span>
+                  </div>
+                </div>
+              </div>
+              {profile && (
+                <div className="mt-5 flex gap-6 sm:gap-8">
+                  <div className="text-center">
+                    <p className="text-xl sm:text-2xl font-bold text-white">{profile.questionCount}</p>
+                    <p className="text-[11px] text-white/60 uppercase tracking-wider">Questions</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xl sm:text-2xl font-bold text-white">{profile.answerCount}</p>
+                    <p className="text-[11px] text-white/60 uppercase tracking-wider">Answers</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {showAskForm && (
+            <div className="mx-auto max-w-2xl">
+              <AskQuestion
+                onSubmit={(data) => createMutation.mutate(data)}
+                onCancel={() => setShowAskForm(false)}
+                isPending={createMutation.isPending}
+              />
+            </div>
+          )}
+
+          <div className="border-b border-gray-200 dark:border-gray-700/50">
+            <div className="flex gap-1 -mb-px overflow-x-auto">
+              {feedTabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`whitespace-nowrap px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
+                    activeTab === tab.id
+                      ? 'border-primary-500 text-primary-600 dark:border-primary-400 dark:text-primary-400'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-600'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {feedLoading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="card p-6 animate-pulse">
+                  <div className="flex gap-3">
+                    <div className="h-10 w-10 shrink-0 rounded-xl bg-gray-200 dark:bg-gray-700" />
+                    <div className="flex-1 space-y-3">
+                      <div className="h-5 w-3/4 rounded bg-gray-200 dark:bg-gray-700" />
+                      <div className="h-4 w-full rounded bg-gray-100 dark:bg-gray-800" />
+                      <div className="flex gap-4">
+                        <div className="h-3 w-16 rounded bg-gray-100 dark:bg-gray-800" />
+                        <div className="h-3 w-12 rounded bg-gray-100 dark:bg-gray-800" />
+                        <div className="h-3 w-12 rounded bg-gray-100 dark:bg-gray-800" />
+                      </div>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-          </section>
-        )}
-      </div>
+          ) : feed.length === 0 ? (
+            <div className="card p-12 text-center">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600">
+                <path d="M5.566 4.657A4.505 4.505 0 016.75 4.5h10.5c.41 0 .806.055 1.183.157A3 3 0 0015.75 3h-7.5a3 3 0 00-2.684 1.657zM2.25 12a3 3 0 013-3h13.5a3 3 0 013 3v6a3 3 0 01-3 3H5.25a3 3 0 01-3-3v-6zM5.25 7.5c-.41 0-.806.055-1.184.157A3 3 0 016.75 6h10.5a3 3 0 012.683 1.657A4.505 4.505 0 0018.75 7.5H5.25z" />
+              </svg>
+              <p className="mt-4 font-medium text-gray-500 dark:text-gray-400">
+                {activeTab === 'unanswered' ? 'No unanswered questions' : 'No questions in this feed'}
+              </p>
+              <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">
+                {activeTab === 'unanswered' ? 'Every question has been answered!' : 'Check back later for new questions.'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {feed.map((q) => (
+                <FeedCard key={q.id} question={q} queryKey={['feed', activeTab]} />
+              ))}
+            </div>
+          )}
+        </div>
       </SidebarLayout>
     );
   }
@@ -257,55 +276,6 @@ export const HomePage = () => {
           </div>
         </div>
       </section>
-
-      {!trendingLoading && trending.length > 0 && (
-        <section>
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">🔥 Trending Now</h2>
-              <p className="mt-1 text-gray-500 dark:text-gray-400">Most active questions from the past week</p>
-            </div>
-            <Link to="/questions" className="text-sm font-medium text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
-              View all &rarr;
-            </Link>
-          </div>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            {trending.map((q) => (
-              <div key={q.id} className={`card group flex items-start gap-4 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${q.author.id === user?.id ? 'border-l-4 border-l-primary-500' : ''}`}>
-                <Link to={`/profile/${q.author.username}`} onClick={(e) => e.stopPropagation()}>
-                  <UserAvatar src={q.author.avatarUrl} username={q.author.username} size="md" />
-                </Link>
-                <div className="min-w-0 flex-1">
-                  <Link to={`/questions/${q.id}`} className="after:absolute after:inset-0">
-                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-primary-600 dark:group-hover:text-primary-400">
-                      {q.title}
-                    </h3>
-                  </Link>
-                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 line-clamp-1">{q.content}</p>
-                  <div className="mt-2 flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
-                    <Link to={`/profile/${q.author.username}`} className="relative z-10 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
-                      {q.author.username}
-                    </Link>
-                    <span className="flex items-center gap-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
-                        <path d="M3.505 2.365A41.369 41.369 0 019 2c1.863 0 3.697.124 5.495.365 1.247.167 2.18 1.108 2.435 2.268a4.45 4.45 0 00-.577-.069 43.141 43.141 0 00-4.706 0C9.229 4.696 7.5 6.727 7.5 8.998v2.24c0 1.413.67 2.735 1.76 3.562l-2.98 2.98A.75.75 0 015 17.25v-3.443c-.501-.048-1-.106-1.495-.172C2.033 13.438 1 12.162 1 10.655V4.706c0-1.57 1.176-2.895 2.505-2.341z" />
-                        <path d="M14.5 6.5c1.064 0 2.09.07 3.09.195 1.416.177 2.41 1.36 2.41 2.74v3.346c0 1.506-1.032 2.782-2.505 2.942-.494.066-.994.124-1.495.172v3.443a.75.75 0 01-1.28.53l-2.98-2.98a4.47 4.47 0 01-.596-.595 3.5 3.5 0 011.09-.329c.588-.083 1.187-.15 1.79-.2A4.46 4.46 0 0115 11.24v-2.24c0-1.364-.625-2.602-1.622-3.5H14.5z" />
-                      </svg>
-                      {q.answerCount ?? 0}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
-                        <path d="M1 8.25a1.25 1.25 0 112.5 0v7.5a1.25 1.25 0 11-2.5 0v-7.5zM11 3V1.7c0-.268.14-.526.395-.607A2 2 0 0114 3c0 .995-.182 1.948-.514 2.826-.204.54.166 1.174.744 1.174h2.52c1.243 0 2.261 1.01 2.146 2.247a23.864 23.864 0 01-1.341 5.974C17.153 16.323 16.072 17 14.9 17h-3.192a3 3 0 01-1.341-.317l-2.734-1.366A3 3 0 006.292 15H5V8h.963c.685 0 1.258-.483 1.612-1.068a4.011 4.011 0 012.166-1.73c.432-.143.853-.386 1.011-.814.16-.432.248-.9.248-1.388z" />
-                      </svg>
-                      {q.likeCount ?? 0}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
 
       <section>
         <div className="mx-auto max-w-2xl text-center">

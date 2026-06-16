@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { ApiResponse, Question, PaginatedResponse, QuestionType } from '@/types';
+import type { ApiResponse, Question, PaginatedResponse, QuestionType, PopularTag } from '@/types';
 
 export interface QuestionFilters {
   search?: string;
@@ -16,6 +16,12 @@ export const getTrendingQuestions = () =>
 
 export const getQuestionById = (id: string, userId?: string) =>
   api.get<ApiResponse<Question>>(`/questions/${id}`, { params: { ...(userId ? { userId } : {}) } }).then((r) => r.data);
+
+export const getFeed = (tab: string, page = 1, limit = 20) =>
+  api.get<ApiResponse<PaginatedResponse<Question>>>('/questions/feed', { params: { tab, page, limit } }).then((r) => r.data);
+
+export const getPopularTags = (limit = 10) =>
+  api.get<ApiResponse<PopularTag[]>>('/questions/popular-tags', { params: { limit } }).then((r) => r.data);
 
 export interface CreateQuestionInput {
   title: string;

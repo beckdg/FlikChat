@@ -37,6 +37,7 @@ export interface Question {
   answerCount?: number;
   likeCount?: number;
   likedByUser?: boolean;
+  discussionCount?: number;
   tags?: Tag[];
 }
 
@@ -92,6 +93,21 @@ export interface ActiveDiscussion {
   totalMessages: number;
   newMessages: number;
   lastActivity: string | null;
+}
+
+export interface TrendingDiscussion {
+  roomId: string;
+  questionId: string;
+  questionTitle: string;
+  answerSnippet: string;
+  messageCount: number;
+  lastActivity: string | null;
+}
+
+export interface PopularTag {
+  id: string;
+  name: string;
+  count: number;
 }
 
 export interface ChatMessage {

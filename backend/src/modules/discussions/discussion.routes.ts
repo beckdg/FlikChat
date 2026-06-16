@@ -1,11 +1,12 @@
 import { Router } from 'express';
-import { getRoomByAnswerId, getRoomById, getMessages, sendMessage, updateMessage, deleteMessage, getMyActiveDiscussions, getRoomParticipants, getRoomMembers } from './discussion.controller';
+import { getRoomByAnswerId, getRoomById, getMessages, sendMessage, updateMessage, deleteMessage, getTrendingDiscussions, getMyActiveDiscussions, getRoomParticipants, getRoomMembers } from './discussion.controller';
 import { sendMessageSchema, updateMessageSchema } from './discussion.validator';
 import { validate } from '../../middleware/validate';
 import { authenticate } from '../../middleware/auth.middleware';
 
 const router = Router();
 
+router.get('/trending', getTrendingDiscussions);
 router.get('/my-active', authenticate, getMyActiveDiscussions);
 router.get('/answer/:answerId', getRoomByAnswerId);
 router.get('/:roomId', getRoomById);
