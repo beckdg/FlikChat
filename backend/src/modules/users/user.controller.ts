@@ -71,3 +71,43 @@ export const uploadCover = async (req: Request, res: Response, next: NextFunctio
     next(error);
   }
 };
+
+export const getUserStats = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const username = req.params.username as string;
+    const result = await userService.getUserStats(username);
+    sendSuccess(res, result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getUserQuestions = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const username = req.params.username as string;
+    const result = await userService.getUserQuestions(username);
+    sendSuccess(res, result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getUserAnswers = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const username = req.params.username as string;
+    const result = await userService.getUserAnswers(username);
+    sendSuccess(res, result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getUserDiscussions = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const username = req.params.username as string;
+    const result = await userService.getUserDiscussions(username);
+    sendSuccess(res, result);
+  } catch (error) {
+    next(error);
+  }
+};

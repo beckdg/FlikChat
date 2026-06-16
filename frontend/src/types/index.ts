@@ -110,3 +110,37 @@ export interface PaginatedResponse<T> {
   limit: number;
   totalPages: number;
 }
+
+export interface UserStats {
+  totalQuestions: number;
+  totalAnswers: number;
+  totalUpvotes: number;
+  totalDiscussions: number;
+}
+
+export interface UserQuestionItem {
+  id: string;
+  title: string;
+  createdAt: string;
+  answerCount: number;
+  tags?: Tag[];
+}
+
+export interface UserAnswerItem {
+  id: string;
+  content: string;
+  questionId: string;
+  questionTitle: string;
+  createdAt: string;
+  voteCount: number;
+}
+
+export interface UserDiscussionItem {
+  roomId: string;
+  questionId: string;
+  questionTitle: string;
+  answerSnippet: string;
+  lastMessage: string | null;
+  lastActivity: string | null;
+  totalMessages: number;
+}
