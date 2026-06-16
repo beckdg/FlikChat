@@ -83,7 +83,7 @@ export const NotificationBell = () => {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-black/10 animate-scale-in dark:border-gray-700 dark:bg-gray-900">
+        <div className="absolute right-0 mt-2 w-80 sm:w-96 max-sm:fixed max-sm:left-4 max-sm:right-4 max-sm:top-20 max-sm:w-auto rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-black/10 animate-scale-in dark:border-gray-700 dark:bg-gray-900">
           <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-gray-800">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Notifications</h3>
             {unreadCount > 0 && (
