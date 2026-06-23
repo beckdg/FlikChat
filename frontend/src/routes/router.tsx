@@ -7,6 +7,7 @@ import {
   DiscussionPage,
   LoginPage,
   RegisterPage,
+  VerifyEmailPage,
   ProfilePage,
   NotFoundPage,
 } from '@/pages';
@@ -49,6 +50,14 @@ export const router = createBrowserRouter([
     element: (
       <MainLayout>
         <RegisterPage />
+      </MainLayout>
+    ),
+  },
+  {
+    path: '/verify-email',
+    element: (
+      <MainLayout>
+        <VerifyEmailPage />
       </MainLayout>
     ),
   },

@@ -8,15 +8,19 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  username  String   @unique
-  password  String
-  bio       String?
-  avatarUrl String?
-  coverUrl  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String    @id @default(uuid())
+  email          String    @unique
+  username       String    @unique
+  password       String
+  bio            String?
+  avatarUrl      String?
+  coverUrl       String?
+  emailVerified  Boolean   @default(false)
+  otp            String?
+  otpExpires     DateTime?
+  otpSentAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   questions        Question[]
   answers          Answer[]

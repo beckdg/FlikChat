@@ -5,6 +5,7 @@ export interface User {
   bio?: string | null;
   avatarUrl?: string | null;
   coverUrl?: string | null;
+  emailVerified?: boolean;
 }
 
 export interface UserProfile extends User {

@@ -4,11 +4,10 @@ import { useMutation } from '@tanstack/react-query';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { registerUser } from '@/services/auth';
-import { useAuthStore } from '@/store/authStore';
+import { getErrorMessage } from '@/utils/format';
 
 export const RegisterPage = () => {
   const navigate = useNavigate();
-  const setAuth = useAuthStore((s) => s.setAuth);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,14 +17,12 @@ export const RegisterPage = () => {
   const { mutate, isPending } = useMutation({
     mutationFn: registerUser,
     onSuccess: (res) => {
-      if (res.success && res.data) {
-        setAuth(res.data.user, res.data.tokens.accessToken);
-        navigate('/');
+      if (res.success && res.data && res.data.requiresEmailVerification) {
+        navigate(`/verify-email?email=${encodeURIComponent(res.data.user.email)}`);
       }
     },
     onError: (err: unknown) => {
-      const msg = err instanceof Error ? err.message : 'Registration failed. Please try again.';
-      setError(msg);
+      setError(getErrorMessage(err));
     },
   });
 

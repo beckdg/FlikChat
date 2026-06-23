@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { loginUser } from '@/services/auth';
 import { useAuthStore } from '@/store/authStore';
+import { getErrorMessage } from '@/utils/format';
 
 export const LoginPage = () => {
   const navigate = useNavigate();
@@ -17,13 +18,16 @@ export const LoginPage = () => {
     mutationFn: loginUser,
     onSuccess: (res) => {
       if (res.success && res.data) {
+        if ('requiresEmailVerification' in res.data) {
+          navigate(`/verify-email?email=${encodeURIComponent(res.data.email)}`);
+          return;
+        }
         setAuth(res.data.user, res.data.tokens.accessToken);
         navigate('/');
       }
     },
     onError: (err: unknown) => {
-      const msg = err instanceof Error ? err.message : 'Login failed. Please try again.';
-      setError(msg);
+      setError(getErrorMessage(err));
     },
   });
 
