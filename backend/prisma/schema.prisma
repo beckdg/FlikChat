@@ -18,8 +18,10 @@ model User {
   emailVerified  Boolean   @default(false)
   otp            String?
   otpExpires     DateTime?
-  otpSentAt      DateTime?
-  createdAt      DateTime  @default(now())
+  otpSentAt            DateTime?
+  resetPasswordToken   String?
+  resetPasswordExpires DateTime?
+  createdAt            DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
   questions        Question[]

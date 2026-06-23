@@ -7,10 +7,12 @@ import {
   uploadAvatar, deleteAccount,
   getUserStats, getUserQuestions, getUserAnswers, getUserDiscussions,
 } from '@/services/users';
+import { changePassword } from '@/services/auth';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { Button } from '@/components/ui/Button';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { Tabs } from '@/components/ui/Tabs';
+import { getErrorMessage } from '@/utils/format';
 import type { UserQuestionItem, UserAnswerItem, UserDiscussionItem } from '@/types';
 
 type ProfileTab = 'questions' | 'answers' | 'discussions';
@@ -347,27 +349,30 @@ export const ProfilePage = () => {
       </div>
 
       {isOwnProfile && (
-        <div className="border-t border-gray-200/60 pt-6 space-y-3 dark:border-gray-700/30">
-          <button
-            onClick={() => setShowLogoutModal(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 transition-all hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800/50"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
-              <path fillRule="evenodd" d="M17 4.25A2.25 2.25 0 0014.75 2h-5.5A2.25 2.25 0 007 4.25v2a.75.75 0 001.5 0v-2a.75.75 0 01.75-.75h5.5a.75.75 0 01.75.75v11.5a.75.75 0 01-.75.75h-5.5a.75.75 0 01-.75-.75v-2a.75.75 0 00-1.5 0v2A2.25 2.25 0 009.25 18h5.5A2.25 2.25 0 0017 15.75V4.25z" clipRule="evenodd" />
-              <path fillRule="evenodd" d="M1 10a.75.75 0 01.75-.75h9.546l-1.048-.943a.75.75 0 111.004-1.114l2.5 2.25a.75.75 0 010 1.114l-2.5 2.25a.75.75 0 11-1.004-1.114l1.048-.943H1.75A.75.75 0 011 10z" clipRule="evenodd" />
-            </svg>
-            Logout
-          </button>
-          <button
-            onClick={() => setShowDeleteModal(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-red-200 px-4 py-3 text-sm font-semibold text-red-600 transition-all hover:bg-red-50 dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-900/20"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
-              <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c-.84 0-1.673.025-2.5.075V3.75c0-.69.56-1.25 1.25-1.25h2.5c.69 0 1.25.56 1.25 1.25v.325C11.673 4.025 10.84 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd" />
-            </svg>
-            Delete Account
-          </button>
-        </div>
+        <>
+          <div className="border-t border-gray-200/60 pt-6 space-y-3 dark:border-gray-700/30">
+            <ChangePasswordSection />
+            <button
+              onClick={() => setShowLogoutModal(true)}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 transition-all hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800/50"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+                <path fillRule="evenodd" d="M17 4.25A2.25 2.25 0 0014.75 2h-5.5A2.25 2.25 0 007 4.25v2a.75.75 0 001.5 0v-2a.75.75 0 01.75-.75h5.5a.75.75 0 01.75.75v11.5a.75.75 0 01-.75.75h-5.5a.75.75 0 01-.75-.75v-2a.75.75 0 00-1.5 0v2A2.25 2.25 0 009.25 18h5.5A2.25 2.25 0 0017 15.75V4.25z" clipRule="evenodd" />
+                <path fillRule="evenodd" d="M1 10a.75.75 0 01.75-.75h9.546l-1.048-.943a.75.75 0 111.004-1.114l2.5 2.25a.75.75 0 010 1.114l-2.5 2.25a.75.75 0 11-1.004-1.114l1.048-.943H1.75A.75.75 0 011 10z" clipRule="evenodd" />
+              </svg>
+              Logout
+            </button>
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-red-200 px-4 py-3 text-sm font-semibold text-red-600 transition-all hover:bg-red-50 dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-900/20"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+                <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c-.84 0-1.673.025-2.5.075V3.75c0-.69.56-1.25 1.25-1.25h2.5c.69 0 1.25.56 1.25 1.25v.325C11.673 4.025 10.84 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd" />
+              </svg>
+              Delete Account
+            </button>
+          </div>
+        </>
       )}
 
       <ConfirmModal
@@ -395,6 +400,96 @@ export const ProfilePage = () => {
     </div>
   );
 };
+
+function ChangePasswordSection() {
+  const [showForm, setShowForm] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: changePassword,
+    onSuccess: () => {
+      setSuccess('Password changed successfully.');
+      setError('');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmNewPassword('');
+      setShowForm(false);
+    },
+    onError: (err: unknown) => {
+      setError(getErrorMessage(err));
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (newPassword !== confirmNewPassword) {
+      setError('New passwords do not match');
+      return;
+    }
+
+    mutate({ currentPassword, newPassword, confirmNewPassword });
+  };
+
+  return (
+    <div className="rounded-xl border-2 border-gray-200 dark:border-gray-700">
+      <button
+        onClick={() => { setShowForm(!showForm); setError(''); setSuccess(''); }}
+        className="flex w-full items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-gray-700 transition-all hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800/50"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+          <path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-1 1v8a1 1 0 001 1h10a1 1 0 001-1V8a1 1 0 00-1-1h-1V6a4 4 0 00-4-4zm-2 5V6a2 2 0 114 0v1H8zm-1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+        </svg>
+        {showForm ? 'Cancel' : 'Change Password'}
+      </button>
+      {showForm && (
+        <form onSubmit={handleSubmit} className="border-t border-gray-200 p-4 space-y-4 dark:border-gray-700">
+          <input
+            type="password"
+            placeholder="Current password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            required
+            className="input-field w-full"
+          />
+          <input
+            type="password"
+            placeholder="New password (at least 8 characters)"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            required
+            minLength={8}
+            className="input-field w-full"
+          />
+          <input
+            type="password"
+            placeholder="Confirm new password"
+            value={confirmNewPassword}
+            onChange={(e) => setConfirmNewPassword(e.target.value)}
+            required
+            minLength={8}
+            className="input-field w-full"
+          />
+          {error && (
+            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+          )}
+          {success && (
+            <p className="text-sm text-green-600 dark:text-green-400">{success}</p>
+          )}
+          <Button type="submit" className="w-full" isLoading={isPending}>
+            Update Password
+          </Button>
+        </form>
+      )}
+    </div>
+  );
+}
 
 function QuestionsTab({ data, isLoading, isError, onRetry }: {
   data: UserQuestionItem[];

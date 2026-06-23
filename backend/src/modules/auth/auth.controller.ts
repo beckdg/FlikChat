@@ -53,6 +53,34 @@ export const getMe = async (req: Request, res: Response, next: NextFunction) => 
   }
 };
 
+export const forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await authService.forgotPassword(req.body);
+    sendSuccess(res, result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await authService.resetPassword(req.body);
+    sendSuccess(res, result, 'Password has been reset successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const changePassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId } = (req as AuthenticatedRequest).user!;
+    const result = await authService.changePassword(userId, req.body);
+    sendSuccess(res, result, 'Password changed successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const checkVerificationStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const email = req.query.email as string;

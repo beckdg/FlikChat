@@ -8,6 +8,8 @@ import {
   LoginPage,
   RegisterPage,
   VerifyEmailPage,
+  ForgotPasswordPage,
+  ResetPasswordPage,
   ProfilePage,
   NotFoundPage,
 } from '@/pages';
@@ -58,6 +60,22 @@ export const router = createBrowserRouter([
     element: (
       <MainLayout>
         <VerifyEmailPage />
+      </MainLayout>
+    ),
+  },
+  {
+    path: '/forgot-password',
+    element: (
+      <MainLayout>
+        <ForgotPasswordPage />
+      </MainLayout>
+    ),
+  },
+  {
+    path: '/reset-password',
+    element: (
+      <MainLayout>
+        <ResetPasswordPage />
       </MainLayout>
     ),
   },

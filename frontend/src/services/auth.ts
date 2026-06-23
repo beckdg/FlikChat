@@ -39,3 +39,12 @@ export const checkVerificationStatus = (email: string) =>
 
 export const fetchMe = () =>
   api.get<ApiResponse<{ user: User }>>('/auth/me').then((r) => r.data);
+
+export const forgotPassword = (data: { email: string }) =>
+  api.post<ApiResponse<{ message: string }>>('/auth/forgot-password', data).then((r) => r.data);
+
+export const resetPassword = (data: { token: string; password: string; confirmPassword: string }) =>
+  api.post<ApiResponse<{ message: string }>>('/auth/reset-password', data).then((r) => r.data);
+
+export const changePassword = (data: { currentPassword: string; newPassword: string; confirmNewPassword: string }) =>
+  api.post<ApiResponse<{ message: string }>>('/auth/change-password', data).then((r) => r.data);

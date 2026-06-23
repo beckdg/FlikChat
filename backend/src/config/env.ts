@@ -20,4 +20,5 @@ export const env = {
     senderName: process.env.BREVO_SENDER_NAME ?? 'FlikChat',
   },
   otpExpiryMinutes: parseInt(process.env.OTP_EXPIRY_MINUTES ?? '10', 10),
+  passwordResetExpiryMinutes: parseInt(process.env.PASSWORD_RESET_EXPIRY_MINUTES ?? '60', 10),
 } as const;

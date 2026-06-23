@@ -4,8 +4,8 @@ import crypto from 'crypto';
 import { prisma } from '../../config/database';
 import { env } from '../../config/env';
 import { AppError } from '../../utils/errors';
-import { sendEmail, generateOtp, createOtpEmailHtml } from '../../services/email';
-import type { RegisterDto, LoginDto, VerifyEmailDto, ResendOtpDto } from './auth.validator';
+import { sendEmail, generateOtp, createOtpEmailHtml, createPasswordResetEmailHtml } from '../../services/email';
+import type { RegisterDto, LoginDto, VerifyEmailDto, ResendOtpDto, ForgotPasswordDto, ResetPasswordDto, ChangePasswordDto } from './auth.validator';
 
 function hashOtp(otp: string): string {
   return crypto.createHash('sha256').update(otp).digest('hex');
@@ -245,6 +245,90 @@ export class AuthService {
       throw new AppError(404, 'User not found');
     }
     return { emailVerified: user.emailVerified };
+  }
+
+  async forgotPassword(data: ForgotPasswordDto) {
+    const { email } = data;
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return { message: 'If an account with that email exists, a password reset link has been sent.' };
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    const resetExpires = new Date(Date.now() + env.passwordResetExpiryMinutes * 60 * 1000);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        resetPasswordToken: hashedToken,
+        resetPasswordExpires: resetExpires,
+      },
+    });
+
+    const resetLink = `${env.clientUrl}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
+
+    await sendEmail({
+      to: { email: user.email, name: user.username },
+      subject: 'FlikChat — Password Reset Request',
+      htmlContent: createPasswordResetEmailHtml(resetLink, user.username),
+    });
+
+    return { message: 'If an account with that email exists, a password reset link has been sent.' };
+  }
+
+  async resetPassword(data: ResetPasswordDto) {
+    const { token, password } = data;
+
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    const user = await prisma.user.findFirst({
+      where: {
+        resetPasswordToken: hashedToken,
+        resetPasswordExpires: { gt: new Date() },
+      },
+    });
+
+    if (!user) {
+      throw new AppError(400, 'Invalid or expired reset token. Please request a new one.');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        resetPasswordToken: null,
+        resetPasswordExpires: null,
+      },
+    });
+
+    return { message: 'Password has been reset successfully.' };
+  }
+
+  async changePassword(userId: string, data: ChangePasswordDto) {
+    const { currentPassword, newPassword } = data;
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new AppError(404, 'User not found');
+    }
+
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isPasswordValid) {
+      throw new AppError(400, 'Current password is incorrect');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword },
+    });
+
+    return { message: 'Password changed successfully.' };
   }
 
   private generateToken(user: { id: string; email: string }): string {
