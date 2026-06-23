@@ -58,9 +58,10 @@ const removeUserFromAllRooms = (userId: string) => {
 };
 
 export const initializeSocket = (httpServer: HttpServer): Server => {
+  const socketOrigins = env.clientUrl.split(',').map(s => s.trim());
   io = new Server(httpServer, {
     cors: {
-      origin: env.clientUrl,
+      origin: socketOrigins,
       methods: ['GET', 'POST'],
       credentials: true,
     },
