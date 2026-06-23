@@ -61,23 +61,27 @@ export class AnswerService {
     if (!question) throw new AppError(404, 'Question not found');
     if (question.authorId === authorId) throw new AppError(403, 'You cannot answer your own question');
 
-    const answer = await prisma.answer.create({
-      data: {
-        content: data.content,
-        questionId: data.questionId,
-        authorId,
-      },
-      include: {
-        author: { select: { id: true, username: true, avatarUrl: true } },
-      },
-    });
+    const [answer, chatRoom] = await prisma.$transaction(async (tx) => {
+      const a = await tx.answer.create({
+        data: {
+          content: data.content,
+          questionId: data.questionId,
+          authorId,
+        },
+        include: {
+          author: { select: { id: true, username: true, avatarUrl: true } },
+        },
+      });
 
-    const chatRoom = await prisma.chatRoom.create({
-      data: { answerId: answer.id },
+      const c = await tx.chatRoom.create({
+        data: { answerId: a.id },
+      });
+
+      return [a, c];
     });
 
     if (question.authorId !== authorId) {
-      notificationService.create({
+      await notificationService.create({
         userId: question.authorId,
         type: 'new_answer',
         title: 'New Answer',

@@ -102,14 +102,14 @@ export class QuestionService {
 
     const items = await prisma.question.findMany({
       where: { createdAt: { gte: sevenDaysAgo } },
-      take: limit,
       orderBy: { createdAt: 'desc' },
       include: questionInclude,
     });
 
     return items
       .map(formatQuestion)
-      .sort((a, b) => b.answerCount - a.answerCount);
+      .sort((a, b) => b.answerCount - a.answerCount)
+      .slice(0, limit);
   }
 
   async getById(id: string, userId?: string) {
@@ -261,7 +261,7 @@ export class QuestionService {
 
     if (question.authorId !== userId) {
       const sender = await prisma.user.findUnique({ where: { id: userId }, select: { username: true } });
-      notificationService.create({
+      await notificationService.create({
         userId: question.authorId,
         type: 'question_liked',
         title: 'Question Liked',

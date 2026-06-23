@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { getMessages, sendMessage, updateMessage, deleteMessage } from '@/services/discussions';
 import { joinRoom, leaveRoom } from '@/services/socket';
 import { useAuthStore } from '@/store/authStore';
@@ -17,7 +17,6 @@ const PREVIEW_MAX = 5;
 
 export const ChatRoom = ({ roomId, variant = 'full' }: ChatRoomProps) => {
   const { user, isAuthenticated } = useAuthStore();
-  const queryClient = useQueryClient();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -25,6 +24,7 @@ export const ChatRoom = ({ roomId, variant = 'full' }: ChatRoomProps) => {
   const [editMsgContent, setEditMsgContent] = useState('');
   const [revealedMsgId, setRevealedMsgId] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const initializedRoomRef = useRef<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['messages', roomId],
@@ -33,10 +33,11 @@ export const ChatRoom = ({ roomId, variant = 'full' }: ChatRoomProps) => {
   });
 
   useEffect(() => {
-    if (data?.data?.items) {
+    if (data?.data?.items && initializedRoomRef.current !== roomId) {
       setMessages(data.data.items);
+      initializedRoomRef.current = roomId;
     }
-  }, [data]);
+  }, [data, roomId]);
 
   const handleNewMessage = useCallback((msg: ChatMessage) => {
     setMessages((prev) => {
@@ -99,10 +100,9 @@ export const ChatRoom = ({ roomId, variant = 'full' }: ChatRoomProps) => {
     try {
       const res = await sendMessage({ content: input.trim(), roomId });
       if (res.data) {
-        setMessages((prev) => [...prev, res.data!]);
+        setMessages((prev) => { if (prev.some((m) => m.id === res.data.id)) return prev; return [...prev, res.data]; });
       }
       setInput('');
-      queryClient.invalidateQueries({ queryKey: ['messages', roomId] });
     } catch {
       setInput('');
     }

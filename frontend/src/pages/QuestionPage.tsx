@@ -513,6 +513,7 @@ export const QuestionPage = () => {
         message="Are you sure you want to delete this question?"
         warning="This will permanently delete the question, all its answers, and all discussion rooms and chat messages associated with those answers. This action cannot be undone."
         confirmLabel="Delete Question"
+        isLoading={deleteQuestionMutation.isPending}
       />
 
       <ConfirmModal
@@ -528,6 +529,7 @@ export const QuestionPage = () => {
         message="Are you sure you want to delete this answer?"
         warning="This will permanently delete the answer and its associated discussion room and all chat messages. This action cannot be undone."
         confirmLabel="Delete Answer"
+        isLoading={deleteAnswerMutation.isPending}
       />
     </>
   );

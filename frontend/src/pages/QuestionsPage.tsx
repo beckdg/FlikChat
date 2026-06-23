@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getFeed, getQuestions as searchQuestions, createQuestion, type QuestionFilters } from '@/services/questions';
 import { useAuthStore } from '@/store/authStore';
@@ -24,6 +24,7 @@ export const QuestionsPage = () => {
   const { isAuthenticated, user } = useAuthStore();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
   const [showForm, setShowForm] = useState(false);
   const [activeTab, setActiveTab] = useState('recent');
 
@@ -32,6 +33,13 @@ export const QuestionsPage = () => {
   const [typeFilter, setTypeFilter] = useState('');
   const [sortBy, setSortBy] = useState<string>('newest');
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    const searchFromUrl = searchParams.get('search');
+    if (searchFromUrl) {
+      setSearch(searchFromUrl);
+    }
+  }, []);
 
   useEffect(() => {
     clearTimeout(debounceRef.current);

@@ -3,11 +3,18 @@ import path from 'path';
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
+const requiredVars = ['DATABASE_URL', 'JWT_SECRET'] as const;
+for (const name of requiredVars) {
+  if (!process.env[name]) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+}
+
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? 'development',
   port: parseInt(process.env.PORT ?? '3001', 10),
-  databaseUrl: process.env.DATABASE_URL ?? '',
-  jwtSecret: process.env.JWT_SECRET ?? '',
+  databaseUrl: process.env.DATABASE_URL!,
+  jwtSecret: process.env.JWT_SECRET!,
   clientUrl: process.env.CLIENT_URL ?? 'http://localhost:5173',
   cloudinary: {
     cloudName: process.env.CLOUDINARY_CLOUD_NAME ?? '',
@@ -21,4 +28,4 @@ export const env = {
   },
   otpExpiryMinutes: parseInt(process.env.OTP_EXPIRY_MINUTES ?? '10', 10),
   passwordResetExpiryMinutes: parseInt(process.env.PASSWORD_RESET_EXPIRY_MINUTES ?? '60', 10),
-} as const;
+};

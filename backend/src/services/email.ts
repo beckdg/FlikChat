@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { env } from '../config/env';
 import { AppError } from '../utils/errors';
 
@@ -38,7 +39,7 @@ export async function sendEmail({ to, subject, htmlContent }: SendEmailParams) {
 }
 
 export function generateOtp(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return crypto.randomInt(100000, 999999).toString();
 }
 
 export function createPasswordResetEmailHtml(resetLink: string, username: string): string {

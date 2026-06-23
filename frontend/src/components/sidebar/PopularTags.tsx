@@ -33,7 +33,7 @@ export const PopularTags = () => {
           {tags.map((tag) => (
             <Link
               key={tag.id}
-              to={`/questions?tag=${tag.name}`}
+              to={`/questions?search=${encodeURIComponent(tag.name)}`}
               className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-primary-50 hover:text-primary-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-primary-900/30 dark:hover:text-primary-400"
             >
               {tag.name}

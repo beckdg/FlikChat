@@ -63,6 +63,7 @@ export const disconnectSocket = (): void => {
 
 export const authenticated = (): void => {
   const s = getSocket();
+  connectPromise = null;
   if (s.connected) {
     s.auth = { token: getToken() };
     s.disconnect().connect();
@@ -77,11 +78,6 @@ export const joinRoom = async (roomId: string): Promise<void> => {
 export const leaveRoom = async (roomId: string): Promise<void> => {
   const s = await connectSocket();
   s.emit('leave_room', { roomId });
-};
-
-export const sendSocketMessage = async (roomId: string, content: string): Promise<void> => {
-  const s = await connectSocket();
-  s.emit('send_message', { roomId, content });
 };
 
 export default getSocket;

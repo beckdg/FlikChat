@@ -3,7 +3,6 @@ import { Server, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
 import { prisma } from '../config/database';
-import { notificationService } from '../modules/notifications/notification.service';
 
 let io: Server | null = null;
 
@@ -116,48 +115,6 @@ export const initializeSocket = (httpServer: HttpServer): Server => {
       if (socket.userId) {
         removeParticipant(payload.roomId, socket.userId);
         emitParticipants(payload.roomId);
-      }
-    });
-
-    socket.on('send_message', async (payload: { roomId: string; content: string }) => {
-      if (!socket.userId) {
-        socket.emit('error', { message: 'Authentication required to send messages' });
-        return;
-      }
-      if (!payload.content?.trim() || !payload.roomId) return;
-
-      try {
-        const message = await prisma.chatMessage.create({
-          data: {
-            content: payload.content.trim(),
-            roomId: payload.roomId,
-            authorId: socket.userId,
-          },
-          include: {
-            author: { select: { id: true, username: true, avatarUrl: true } },
-          },
-        });
-
-        io!.to(payload.roomId).emit('new_message', message);
-
-        const previousAuthors = await prisma.chatMessage.findMany({
-          where: { roomId: payload.roomId, authorId: { not: socket.userId } },
-          distinct: ['authorId'],
-          select: { authorId: true },
-        });
-
-        for (const { authorId: targetId } of previousAuthors) {
-          notificationService.create({
-            userId: targetId,
-            type: 'message_reply',
-            title: 'New Reply',
-            message: `${message.author.username} replied in a discussion you're part of`,
-            senderId: socket.userId,
-          });
-        }
-      } catch (err) {
-        console.error('[Socket] Error sending message:', err);
-        socket.emit('error', { message: 'Failed to send message' });
       }
     });
 
