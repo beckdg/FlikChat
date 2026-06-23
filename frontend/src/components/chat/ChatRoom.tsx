@@ -99,8 +99,9 @@ export const ChatRoom = ({ roomId, variant = 'full' }: ChatRoomProps) => {
 
     try {
       const res = await sendMessage({ content: input.trim(), roomId });
-      if (res.data) {
-        setMessages((prev) => { if (prev.some((m) => m.id === res.data.id)) return prev; return [...prev, res.data]; });
+      const msg = res.data;
+      if (msg) {
+        setMessages((prev) => { if (prev.some((m) => m.id === msg.id)) return prev; return [...prev, msg]; });
       }
       setInput('');
     } catch {
