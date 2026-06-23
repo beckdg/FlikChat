@@ -1,6 +1,6 @@
 {
-  "installCommand": "cd frontend && npm install",
-  "buildCommand": "cd frontend && npm run build",
+  "installCommand": "npm install --ignore-scripts",
+  "buildCommand": "npm run build --workspace=frontend",
   "outputDirectory": "frontend/dist",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
