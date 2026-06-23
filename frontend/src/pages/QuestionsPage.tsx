@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getFeed, getQuestions as searchQuestions, createQuestion, type QuestionFilters } from '@/services/questions';
 import { useAuthStore } from '@/store/authStore';
@@ -21,7 +21,7 @@ const sortOptions = [
 ] as const;
 
 export const QuestionsPage = () => {
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();

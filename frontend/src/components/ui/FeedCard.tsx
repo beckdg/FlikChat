@@ -10,7 +10,7 @@ import type { Question } from '@/types';
 
 interface FeedCardProps {
   question: Question;
-  queryKey: string[];
+  queryKey: unknown[];
 }
 
 export const FeedCard = ({ question, queryKey }: FeedCardProps) => {
