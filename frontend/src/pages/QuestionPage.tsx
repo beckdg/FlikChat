@@ -147,7 +147,7 @@ export const QuestionPage = () => {
     <SidebarLayout
       sidebar={
         <>
-          <RelatedQuestions currentQuestionId={id} />
+          <RelatedQuestions />
           <ActiveDiscussions />
         </>
       }

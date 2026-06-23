@@ -165,7 +165,7 @@ export const DiscussionPage = () => {
   return (
     <div className="mx-auto max-w-6xl animate-fade-in">
       <button
-        onClick={() => navigate(question ? `/questions/${question.id}` : -1)}
+        onClick={() => { if (question) navigate(`/questions/${question.id}`); else navigate(-1); }}
         className="mb-4 flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors"
       >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
