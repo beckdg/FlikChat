@@ -30,7 +30,7 @@ export const VerifyEmailPage = () => {
   };
 
   const { mutate: verify, isPending: isVerifying } = useMutation({
-    mutationFn: () => verifyEmail({ email, otp: digits.join('') }),
+    mutationFn: (code: string) => verifyEmail({ email, otp: code }),
     onSuccess: (res) => {
       if (res.success && res.data && 'tokens' in res.data) {
         setAuth(res.data.user, res.data.tokens.accessToken);
@@ -60,28 +60,6 @@ export const VerifyEmailPage = () => {
     },
   });
 
-  const submitCode = (code: string) => {
-    verifyEmail(
-      { email, otp: code },
-      {
-        onSuccess: (res) => {
-          if (res.success && res.data && 'tokens' in res.data) {
-            setAuth(res.data.user, res.data.tokens.accessToken);
-            navigate('/', { replace: true });
-          }
-        },
-        onError: (err: unknown) => {
-          const msg = getErrorMessage(err);
-          if (msg === 'Email already verified') {
-            redirectToLogin();
-            return;
-          }
-          setError(msg);
-        },
-      },
-    );
-  };
-
   const handleChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
     const newDigits = [...digits];
@@ -96,7 +74,7 @@ export const VerifyEmailPage = () => {
     if (value && index === 5) {
       const code = [...newDigits.slice(0, 5), value.slice(-1)].join('');
       if (code.length === 6) {
-        submitCode(code);
+        verify(code);
       }
     }
   };
@@ -113,7 +91,7 @@ export const VerifyEmailPage = () => {
     if (pasted.length !== 6) return;
     setDigits(pasted.split(''));
     setError('');
-    submitCode(pasted);
+    verify(pasted);
   };
 
   if (!email) {
@@ -220,7 +198,7 @@ export const VerifyEmailPage = () => {
               className="mt-6 w-full"
               size="lg"
               isLoading={isVerifying}
-              onClick={() => verify()}
+              onClick={() => verify(digits.join(''))}
               disabled={digits.some((d) => !d)}
             >
               Verify Email

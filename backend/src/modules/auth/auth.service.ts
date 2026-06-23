@@ -90,8 +90,8 @@ export class AuthService {
     }
 
     const isValid = crypto.timingSafeEqual(
-      Buffer.from(user.otp),
-      Buffer.from(hashOtp(otp)),
+      Buffer.from(user.otp, 'hex'),
+      Buffer.from(hashOtp(otp), 'hex'),
     );
 
     if (!isValid) {
